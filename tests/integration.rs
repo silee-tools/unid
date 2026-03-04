@@ -786,3 +786,44 @@ fn arrow_bidirectional_with_custom_head() {
     let head_count = stdout.chars().filter(|&c| c == '◆').count();
     assert_eq!(head_count, 2, "Expected 2 custom arrowheads, got {}", head_count);
 }
+
+// ─── S6: Arrow Legend ───────────────────────────────────────────────
+
+#[test]
+fn arrow_legend_horizontal() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 30 5\n\
+         collision off\n\
+         rect 0 1 4 1 id=a c=A\n\
+         rect 20 1 4 1 id=b c=B\n\
+         arrow a.r b.l lg=request",
+    );
+    assert!(ok);
+    assert!(stdout.contains("request"));
+}
+
+#[test]
+fn arrow_legend_with_pos() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 30 5\n\
+         collision off\n\
+         rect 0 1 4 1 id=a c=A\n\
+         rect 20 1 4 1 id=b c=B\n\
+         arrow a.r b.l pos=b lg=data",
+    );
+    assert!(ok);
+    assert!(stdout.contains("data"));
+}
+
+#[test]
+fn arrow_legend_vertical() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 20 12\n\
+         collision off\n\
+         rect 2 0 6 1 id=a c=A\n\
+         rect 2 8 6 1 id=b c=B\n\
+         arrow a.b b.t lg=flow",
+    );
+    assert!(ok);
+    assert!(stdout.contains("flow"));
+}

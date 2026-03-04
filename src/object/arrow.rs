@@ -29,6 +29,8 @@ pub struct ResolvedArrow {
     pub head: Option<char>,
     /// Bidirectional mode: arrowhead on both ends.
     pub both: bool,
+    /// Legend text displayed near the arrow.
+    pub legend: Option<super::Legend>,
 }
 
 /// Converts a Side to the outgoing direction from that side.

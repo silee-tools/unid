@@ -477,8 +477,13 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
 
     let mut head: Option<char> = None;
     let mut both = false;
+    let mut lg_pos: Option<LegendPos> = None;
+    let mut lg_overflow: Option<ContentOverflow> = None;
+    let mut lg_align: Option<ContentAlign> = None;
 
-    for token in &tokens[3..] {
+    let greedy_idx = greedy_token_index(tokens, 3);
+
+    for token in &tokens[3..greedy_idx] {
         if let Some(v) = strip_option(token, "head") {
             let ch = v.chars().next().ok_or_else(|| UnidError::Parse {
                 line,
@@ -487,9 +492,34 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
             head = Some(ch);
         } else if token == "both" {
             both = true;
+        } else if let Some(v) = strip_option(token, "pos").or_else(|| strip_option(token, "position")) {
+            lg_pos = Some(parse_legend_pos(v, line)?);
+        } else if let Some(v) = strip_option(token, "lg-overflow") {
+            lg_overflow = Some(parse_content_overflow(v, line)?);
+        } else if let Some(v) = strip_option(token, "lg-align") {
+            lg_align = Some(parse_content_align(v, line)?);
         } else {
-            // Ignore unknown options for forward compatibility with lg= etc (S6)
-            break;
+            return Err(UnidError::Parse {
+                line,
+                message: format!("unknown arrow option '{}'", token),
+            });
+        }
+    }
+
+    // Parse legend if present
+    let mut legend = None;
+    if greedy_idx < tokens.len() {
+        for i in greedy_idx..tokens.len() {
+            if tokens[i].starts_with("legend=") || tokens[i].starts_with("lg=") {
+                let lg_text = extract_legend(tokens, i, line)?;
+                legend = Some(Legend {
+                    text: lg_text,
+                    pos: lg_pos.unwrap_or(LegendPos::Auto),
+                    overflow: lg_overflow.unwrap_or_default(),
+                    align: lg_align.unwrap_or_default(),
+                });
+                break;
+            }
         }
     }
 
@@ -500,6 +530,7 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
         dst_side,
         head,
         both,
+        legend,
         line,
     })
 }

@@ -1,5 +1,5 @@
 use crate::object::rect::{BorderStyle, ContentAlign, ContentOverflow, Side};
-use crate::object::DrawObject;
+use crate::object::{DrawObject, Legend};
 
 /// Represents a parsed DSL command.
 #[derive(Debug)]
@@ -24,6 +24,7 @@ pub enum DslCommand {
         dst_side: Side,
         head: Option<char>,
         both: bool,
+        legend: Option<Legend>,
         line: usize,
     },
     /// Global arrowhead character override.

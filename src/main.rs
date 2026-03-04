@@ -10,7 +10,7 @@ use unicode_diagram::dsl::parse;
 use unicode_diagram::error::UnidError;
 use unicode_diagram::object::arrow::{compute_route, ResolvedArrow};
 use unicode_diagram::object::rect::{BorderStyle, ContentAlign, ContentOverflow, Side};
-use unicode_diagram::object::{DrawObject, HLine, Rect, Text, VLine};
+use unicode_diagram::object::{DrawObject, HLine, Legend, Rect, Text, VLine};
 use unicode_diagram::renderer::Renderer;
 
 fn main() {
@@ -62,6 +62,7 @@ struct PendingArrowSlot {
     dst_side: Side,
     head: Option<char>,
     both: bool,
+    legend: Option<Legend>,
     line: usize,
 }
 
@@ -123,6 +124,7 @@ fn process_commands(
                 dst_side,
                 head,
                 both,
+                legend,
                 line,
             } => {
                 let idx = slots.len();
@@ -135,6 +137,7 @@ fn process_commands(
                     dst_side,
                     head,
                     both,
+                    legend,
                     line,
                 });
             }
@@ -262,6 +265,7 @@ fn resolve_arrows_into_slots(
             waypoints,
             head: effective_head,
             both: slot.both,
+            legend: slot.legend.clone(),
         }));
     }
     Ok(())

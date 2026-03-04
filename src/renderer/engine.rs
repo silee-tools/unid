@@ -1,6 +1,6 @@
 use crate::canvas::Canvas;
 use crate::error::UnidError;
-use crate::object::arrow::{corner_char, segment_dir, ResolvedArrow};
+use crate::object::arrow::{corner_char, segment_dir, Dir, ResolvedArrow};
 use crate::object::{
     BorderStyle, ContentAlign, ContentOverflow, DrawObject, HLine, Legend, LegendPos, LineStyle,
     Rect, Text, VLine,
@@ -407,7 +407,49 @@ impl Renderer {
             self.canvas.put_char(sc, sr, tip, false, idx)?;
         }
 
+        // Legend: place text near the midpoint of the first segment
+        if let Some(legend) = &arrow.legend {
+            self.draw_arrow_legend(wp, legend, idx)?;
+        }
+
         Ok(())
+    }
+
+    /// Draws arrow legend text near the midpoint of the first segment.
+    fn draw_arrow_legend(
+        &mut self,
+        wp: &[(usize, usize)],
+        legend: &Legend,
+        idx: usize,
+    ) -> Result<(), UnidError> {
+        if wp.len() < 2 {
+            return Ok(());
+        }
+
+        let (fc, fr) = wp[0];
+        let (tc, tr) = wp[1];
+        let mid_c = (fc + tc) / 2;
+        let mid_r = (fr + tr) / 2;
+        let dir = segment_dir(fc, fr, tc, tr);
+        let is_horizontal = matches!(dir, Dir::Left | Dir::Right);
+
+        let effective_pos = match legend.pos {
+            LegendPos::Auto => {
+                if is_horizontal { LegendPos::Top } else { LegendPos::Right }
+            }
+            other => other,
+        };
+
+        let text_w = width::str_width(&legend.text);
+        let (lg_col, lg_row) = match effective_pos {
+            LegendPos::Top => (mid_c.saturating_sub(text_w / 2), mid_r.saturating_sub(1)),
+            LegendPos::Bottom => (mid_c.saturating_sub(text_w / 2), mid_r + 1),
+            LegendPos::Left => (mid_c.saturating_sub(text_w + 1), mid_r),
+            LegendPos::Right => (mid_c + 1, mid_r),
+            LegendPos::Auto => unreachable!(),
+        };
+
+        self.draw_legend_text(lg_col, lg_row, legend, idx)
     }
 
     /// Draws a straight line segment (horizontal or vertical).
@@ -740,28 +782,28 @@ mod tests {
 
     #[test]
     fn render_horizontal_arrow_right() {
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (4, 0)], head: None, both: false };
+        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (4, 0)], head: None, both: false, legend: None };
         let result = render_objects(5, 1, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "────→");
     }
 
     #[test]
     fn render_horizontal_arrow_left() {
-        let arrow = ResolvedArrow { waypoints: vec![(4, 0), (0, 0)], head: None, both: false };
+        let arrow = ResolvedArrow { waypoints: vec![(4, 0), (0, 0)], head: None, both: false, legend: None };
         let result = render_objects(5, 1, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "←────");
     }
 
     #[test]
     fn render_vertical_arrow_down() {
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 2)], head: None, both: false };
+        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 2)], head: None, both: false, legend: None };
         let result = render_objects(1, 3, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "│\n│\n↓");
     }
 
     #[test]
     fn render_vertical_arrow_up() {
-        let arrow = ResolvedArrow { waypoints: vec![(0, 2), (0, 0)], head: None, both: false };
+        let arrow = ResolvedArrow { waypoints: vec![(0, 2), (0, 0)], head: None, both: false, legend: None };
         let result = render_objects(1, 3, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "↑\n│\n│");
     }
@@ -872,7 +914,7 @@ mod tests {
     #[test]
     fn render_l_shaped_arrow() {
         // L-shape: right then down via bend at (3,0)
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (3, 0), (3, 2)], head: None, both: false };
+        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (3, 0), (3, 2)], head: None, both: false, legend: None };
         let result = render_objects(4, 3, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "───┐\n   │\n   ↓");
     }
@@ -880,7 +922,7 @@ mod tests {
     #[test]
     fn render_z_shaped_arrow() {
         // Z-shape: down, then right, then down
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 2), (4, 2), (4, 4)], head: None, both: false };
+        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 2), (4, 2), (4, 4)], head: None, both: false, legend: None };
         let result = render_objects(5, 5, &[DrawObject::Arrow(arrow)], false);
         assert!(result.contains('│'));
         assert!(result.contains('└'));
@@ -891,7 +933,7 @@ mod tests {
     #[test]
     fn render_u_shaped_arrow() {
         // U-shape: down, right, then up
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 3), (4, 3), (4, 0)], head: None, both: false };
+        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 3), (4, 3), (4, 0)], head: None, both: false, legend: None };
         let result = render_objects(5, 4, &[DrawObject::Arrow(arrow)], false);
         assert!(result.contains('└'));
         assert!(result.contains('┘'));
