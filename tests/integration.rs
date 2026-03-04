@@ -830,6 +830,33 @@ fn text_overwrites_structure() {
 }
 
 #[test]
+fn self_loop_right_to_top() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 20 6\n\
+         collision off\n\
+         rect 2 1 8 1 id=a c=Loop\n\
+         arrow a.r a.t",
+    );
+    assert!(ok);
+    assert!(stdout.contains('↓')); // Arrowhead entering top
+    assert!(stdout.contains('┘')); // Corner from horizontal to vertical
+    assert!(stdout.contains('┐')); // Corner from vertical to horizontal
+}
+
+#[test]
+fn self_loop_bottom_to_left() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 20 8\n\
+         collision off\n\
+         rect 2 2 8 1 id=a c=Loop\n\
+         arrow a.b a.l",
+    );
+    assert!(ok);
+    assert!(stdout.contains('→')); // Arrowhead entering left
+    assert!(stdout.contains('└')); // Corner
+}
+
+#[test]
 fn arrow_legend_vertical() {
     let (stdout, _, ok) = run_stdin(
         "canvas 20 12\n\

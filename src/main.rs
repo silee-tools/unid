@@ -8,7 +8,7 @@ use unicode_diagram::cli::{Cli, CollisionMode, Commands};
 use unicode_diagram::dsl::command::{CanvasSize, DslCommand};
 use unicode_diagram::dsl::parse;
 use unicode_diagram::error::UnidError;
-use unicode_diagram::object::arrow::{compute_route, ResolvedArrow};
+use unicode_diagram::object::arrow::{compute_route, compute_self_loop, ResolvedArrow};
 use unicode_diagram::object::rect::{BorderStyle, ContentAlign, ContentOverflow, Side};
 use unicode_diagram::object::{DrawObject, HLine, Legend, Rect, Text, VLine};
 use unicode_diagram::renderer::Renderer;
@@ -256,7 +256,11 @@ fn resolve_arrows_into_slots(
 
         let (sx, sy) = src.src_anchor(slot.src_side);
         let (ex, ey) = dst.dst_anchor(slot.dst_side);
-        let waypoints = compute_route(sx, sy, slot.src_side, ex, ey, slot.dst_side);
+        let waypoints = if slot.src_id == slot.dst_id {
+            compute_self_loop(sx, sy, slot.src_side, ex, ey, slot.dst_side)
+        } else {
+            compute_route(sx, sy, slot.src_side, ex, ey, slot.dst_side)
+        };
 
         // Resolve effective arrowhead: per-arrow > global > default
         let effective_head = slot.head.or(global_arrowhead);

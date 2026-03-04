@@ -226,6 +226,51 @@ fn midpoint(a: usize, b: usize) -> usize {
     (a + b) / 2
 }
 
+/// Computes a self-loop route (src and dst on the same object).
+/// Always routes *outside* the object using a ㄷ-shape detour.
+pub fn compute_self_loop(
+    sx: usize,
+    sy: usize,
+    src_side: Side,
+    ex: usize,
+    ey: usize,
+    dst_side: Side,
+) -> Vec<(usize, usize)> {
+    let gap = ROUTING_GAP;
+    let src_dir = side_to_outgoing_dir(src_side);
+    // For self-loop, extend dst clearance point *away* from the object (outgoing direction)
+    let dst_away = side_to_outgoing_dir(dst_side);
+
+    // Extend from src anchor in src_dir by gap, then route to dst approach, then to dst
+    let (p1c, p1r) = extend_point(sx, sy, src_dir, gap);
+    let (p2c, p2r) = extend_point(ex, ey, dst_away, gap);
+
+    // If p1 and p2 share an axis, we can do a simple 2-bend
+    if p1c == p2c || p1r == p2r {
+        vec![(sx, sy), (p1c, p1r), (p2c, p2r), (ex, ey)]
+    } else {
+        // 3-bend: connect via an intermediate segment
+        // Choose the corner path based on src/dst directions
+        let src_horizontal = matches!(src_dir, Dir::Left | Dir::Right);
+        if src_horizontal {
+            // p1 is on horizontal extension, p2 on vertical extension (or vice versa)
+            vec![(sx, sy), (p1c, p1r), (p1c, p2r), (p2c, p2r), (ex, ey)]
+        } else {
+            vec![(sx, sy), (p1c, p1r), (p2c, p1r), (p2c, p2r), (ex, ey)]
+        }
+    }
+}
+
+/// Extends a point in the given direction by `distance`.
+fn extend_point(c: usize, r: usize, dir: Dir, distance: usize) -> (usize, usize) {
+    match dir {
+        Dir::Right => (c + distance, r),
+        Dir::Left => (c.saturating_sub(distance), r),
+        Dir::Down => (c, r + distance),
+        Dir::Up => (c, r.saturating_sub(distance)),
+    }
+}
+
 /// Returns the corner character for a waypoint where incoming direction meets outgoing direction.
 pub fn corner_char(incoming: Dir, outgoing: Dir) -> char {
     match (incoming, outgoing) {
