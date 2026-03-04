@@ -7,7 +7,11 @@ fn unid() -> Command {
 #[test]
 fn render_simple_rect_from_inline() {
     let output = unid()
-        .args(["render", "--inline", "canvas 6 3, collision off, rect 0 0 4 1"])
+        .args([
+            "render",
+            "--inline",
+            "canvas 6 3, collision off, rect 0 0 4 1",
+        ])
         .output()
         .unwrap();
     assert!(output.status.success());
@@ -110,11 +114,7 @@ fn render_from_file() {
     let dir = std::env::temp_dir().join("unid_test");
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("test.unid");
-    std::fs::write(
-        &path,
-        "canvas 8 3\ncollision off\nrect 0 0 6 1\n",
-    )
-    .unwrap();
+    std::fs::write(&path, "canvas 8 3\ncollision off\nrect 0 0 6 1\n").unwrap();
 
     let output = unid()
         .args(["render", "--file", path.to_str().unwrap()])
@@ -205,10 +205,7 @@ rect 0 0 6 1 style=light,\
 rect 0 3 6 1 style=heavy,\
 rect 0 6 6 1 style=double,\
 rect 0 9 6 1 style=rounded";
-    let output = unid()
-        .args(["render", "--inline", input])
-        .output()
-        .unwrap();
+    let output = unid().args(["render", "--inline", input]).output().unwrap();
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains('┌')); // light
@@ -251,11 +248,9 @@ fn render_lines() {
 
 #[test]
 fn render_cjk_mixed_diagram() {
-    let input = r#"canvas 30 5, collision off, rect 0 0 12 1 "서버", rect 18 0 8 1 "DB", arrow 14 1 18 1"#;
-    let output = unid()
-        .args(["render", "--inline", input])
-        .output()
-        .unwrap();
+    let input =
+        r#"canvas 30 5, collision off, rect 0 0 12 1 "서버", rect 18 0 8 1 "DB", arrow 14 1 18 1"#;
+    let output = unid().args(["render", "--inline", input]).output().unwrap();
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("서버"));
@@ -288,7 +283,11 @@ fn error_missing_collision() {
 #[test]
 fn error_parse_error() {
     let output = unid()
-        .args(["render", "--inline", "canvas 10 5, collision on, badcmd 1 2"])
+        .args([
+            "render",
+            "--inline",
+            "canvas 10 5, collision on, badcmd 1 2",
+        ])
         .output()
         .unwrap();
     assert!(!output.status.success());

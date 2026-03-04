@@ -146,11 +146,7 @@ impl Renderer {
             self.canvas.put_char(tc, fr, corner, self.collision)?;
 
             // Vertical segment
-            let (v_start, v_end) = if tr > fr {
-                (fr + 1, tr)
-            } else {
-                (tr, fr - 1)
-            };
+            let (v_start, v_end) = if tr > fr { (fr + 1, tr) } else { (tr, fr - 1) };
             for r in v_start..v_end {
                 self.canvas.put_char(tc, r, '│', self.collision)?;
             }
@@ -194,7 +190,12 @@ mod tests {
     use crate::object::*;
     use pretty_assertions::assert_eq;
 
-    fn render_objects(width: usize, height: usize, objects: &[DrawObject], collision: bool) -> String {
+    fn render_objects(
+        width: usize,
+        height: usize,
+        objects: &[DrawObject],
+        collision: bool,
+    ) -> String {
         let canvas = Canvas::new(width, height);
         let mut renderer = Renderer::new(canvas, collision);
         renderer.draw_all(objects).unwrap();

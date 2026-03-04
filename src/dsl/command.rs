@@ -4,7 +4,10 @@ use crate::object::DrawObject;
 #[derive(Debug)]
 pub enum DslCommand {
     /// Canvas size declaration.
-    Canvas { width: CanvasSize, height: CanvasSize },
+    Canvas {
+        width: CanvasSize,
+        height: CanvasSize,
+    },
     /// Collision mode declaration.
     Collision(bool),
     /// A drawable object.

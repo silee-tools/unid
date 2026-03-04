@@ -141,10 +141,7 @@ fn run_list(file: Option<String>, inline: Option<String>) -> Result<(), UnidErro
     };
 
     println!("Canvas: {}x{}{}", width, height, auto_label);
-    println!(
-        "Collision: {}",
-        if collision { "on" } else { "off" }
-    );
+    println!("Collision: {}", if collision { "on" } else { "off" });
     println!("Objects: {}", objects.len());
 
     // Sort by position: row first, then col

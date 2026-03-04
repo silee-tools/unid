@@ -419,10 +419,7 @@ mod tests {
         let cmds = parse("arrow 0 0 10 5").unwrap();
         match &cmds[0] {
             DslCommand::Object(DrawObject::Arrow(a)) => {
-                assert_eq!(
-                    (a.from_col, a.from_row, a.to_col, a.to_row),
-                    (0, 0, 10, 5)
-                );
+                assert_eq!((a.from_col, a.from_row, a.to_col, a.to_row), (0, 0, 10, 5));
             }
             _ => panic!("expected Arrow"),
         }
