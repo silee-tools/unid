@@ -25,6 +25,10 @@ pub struct ResolvedArrow {
     /// First point = source anchor (outside border).
     /// Last point = destination anchor (on border).
     pub waypoints: Vec<(usize, usize)>,
+    /// Custom arrowhead character (overrides global/default).
+    pub head: Option<char>,
+    /// Bidirectional mode: arrowhead on both ends.
+    pub both: bool,
 }
 
 /// Converts a Side to the outgoing direction from that side.
@@ -155,6 +159,7 @@ fn is_favorable_bend(fx: usize, fy: usize, dir: Dir, tx: usize, ty: usize) -> bo
 }
 
 /// 2-bend routing for parallel directions.
+#[allow(clippy::too_many_arguments)]
 fn route_2bend(
     sx: usize,
     sy: usize,

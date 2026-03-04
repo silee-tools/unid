@@ -22,8 +22,12 @@ pub enum DslCommand {
         src_side: Side,
         dst_id: String,
         dst_side: Side,
+        head: Option<char>,
+        both: bool,
         line: usize,
     },
+    /// Global arrowhead character override.
+    Arrowhead(char),
 }
 
 /// Canvas dimension: explicit size or auto.

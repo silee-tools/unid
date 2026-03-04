@@ -711,3 +711,78 @@ fn duplicate_id_error() {
     assert!(!ok);
     assert!(stderr.contains("duplicate"));
 }
+
+// ─── S5: Arrowhead + Bidirectional ──────────────────────────────────
+
+#[test]
+fn arrow_custom_head() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 30 3\n\
+         collision off\n\
+         rect 0 0 4 1 id=a c=A\n\
+         rect 20 0 4 1 id=b c=B\n\
+         arrow a.r b.l head=▶",
+    );
+    assert!(ok);
+    assert!(stdout.contains('▶'));
+    // Should NOT contain default arrowhead
+    assert!(!stdout.contains('→'));
+}
+
+#[test]
+fn arrow_global_arrowhead() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 30 3\n\
+         collision off\n\
+         arrowhead ▶\n\
+         rect 0 0 4 1 id=a c=A\n\
+         rect 20 0 4 1 id=b c=B\n\
+         arrow a.r b.l",
+    );
+    assert!(ok);
+    assert!(stdout.contains('▶'));
+}
+
+#[test]
+fn arrow_per_arrow_overrides_global() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 30 3\n\
+         collision off\n\
+         arrowhead ▶\n\
+         rect 0 0 4 1 id=a c=A\n\
+         rect 20 0 4 1 id=b c=B\n\
+         arrow a.r b.l head=◆",
+    );
+    assert!(ok);
+    assert!(stdout.contains('◆'));
+    assert!(!stdout.contains('▶'));
+}
+
+#[test]
+fn arrow_bidirectional() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 30 3\n\
+         collision off\n\
+         rect 0 0 4 1 id=a c=A\n\
+         rect 20 0 4 1 id=b c=B\n\
+         arrow a.r b.l both",
+    );
+    assert!(ok);
+    // Should have arrowhead at both ends: ← at destination (b.l) and → at source (a.r reversed)
+    assert!(stdout.contains('←'));
+}
+
+#[test]
+fn arrow_bidirectional_with_custom_head() {
+    let (stdout, _, ok) = run_stdin(
+        "canvas 30 3\n\
+         collision off\n\
+         rect 0 0 4 1 id=a c=A\n\
+         rect 20 0 4 1 id=b c=B\n\
+         arrow a.r b.l both head=◆",
+    );
+    assert!(ok);
+    // Custom head on both ends
+    let head_count = stdout.chars().filter(|&c| c == '◆').count();
+    assert_eq!(head_count, 2, "Expected 2 custom arrowheads, got {}", head_count);
+}

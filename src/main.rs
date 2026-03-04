@@ -53,6 +53,18 @@ enum DrawSlot {
     PendingArrow,
 }
 
+/// Unresolved arrow reference stored while objects are being collected.
+struct PendingArrowSlot {
+    slot_idx: usize,
+    src_id: String,
+    src_side: Side,
+    dst_id: String,
+    dst_side: Side,
+    head: Option<char>,
+    both: bool,
+    line: usize,
+}
+
 struct CanvasConfig {
     width: CanvasSize,
     height: CanvasSize,
@@ -76,7 +88,8 @@ fn process_commands(
     // Slots preserve DSL ordering: arrows start as PendingArrow and get
     // replaced with resolved DrawObjects after all rects are collected.
     let mut slots: Vec<DrawSlot> = Vec::new();
-    let mut arrow_slots: Vec<(usize, String, Side, String, Side, usize)> = Vec::new();
+    let mut arrow_slots: Vec<PendingArrowSlot> = Vec::new();
+    let mut global_arrowhead: Option<char> = None;
 
     for cmd in commands {
         match cmd {
@@ -108,11 +121,25 @@ fn process_commands(
                 src_side,
                 dst_id,
                 dst_side,
+                head,
+                both,
                 line,
             } => {
                 let idx = slots.len();
                 slots.push(DrawSlot::PendingArrow);
-                arrow_slots.push((idx, src_id, src_side, dst_id, dst_side, line));
+                arrow_slots.push(PendingArrowSlot {
+                    slot_idx: idx,
+                    src_id,
+                    src_side,
+                    dst_id,
+                    dst_side,
+                    head,
+                    both,
+                    line,
+                });
+            }
+            DslCommand::Arrowhead(ch) => {
+                global_arrowhead = Some(ch);
             }
         }
     }
@@ -128,7 +155,7 @@ fn process_commands(
     };
 
     // Resolve arrows and fill PendingArrow slots
-    resolve_arrows_into_slots(&mut slots, &arrow_slots)?;
+    resolve_arrows_into_slots(&mut slots, &arrow_slots, global_arrowhead)?;
 
     let objects: Vec<DrawObject> = slots
         .into_iter()
@@ -181,7 +208,8 @@ impl AnchorSource {
 /// Resolves unresolved arrows and fills their reserved slots.
 fn resolve_arrows_into_slots(
     slots: &mut [DrawSlot],
-    arrow_slots: &[(usize, String, Side, String, Side, usize)],
+    arrow_slots: &[PendingArrowSlot],
+    global_arrowhead: Option<char>,
 ) -> Result<(), UnidError> {
     // Phase 1: Build ID → AnchorSource mapping from all object types
     let mut id_anchors: HashMap<String, AnchorSource> = HashMap::new();
@@ -213,21 +241,28 @@ fn resolve_arrows_into_slots(
     }
 
     // Phase 2: Resolve each arrow and replace PendingArrow slots
-    for (idx, src_id, src_side, dst_id, dst_side, line) in arrow_slots {
-        let src = id_anchors.get(src_id).ok_or_else(|| UnidError::Parse {
-            line: *line,
-            message: format!("unknown object id '{}' in arrow source", src_id),
+    for slot in arrow_slots {
+        let src = id_anchors.get(&slot.src_id).ok_or_else(|| UnidError::Parse {
+            line: slot.line,
+            message: format!("unknown object id '{}' in arrow source", slot.src_id),
         })?;
-        let dst = id_anchors.get(dst_id).ok_or_else(|| UnidError::Parse {
-            line: *line,
-            message: format!("unknown object id '{}' in arrow destination", dst_id),
+        let dst = id_anchors.get(&slot.dst_id).ok_or_else(|| UnidError::Parse {
+            line: slot.line,
+            message: format!("unknown object id '{}' in arrow destination", slot.dst_id),
         })?;
 
-        let (sx, sy) = src.src_anchor(*src_side);
-        let (ex, ey) = dst.dst_anchor(*dst_side);
-        let waypoints = compute_route(sx, sy, *src_side, ex, ey, *dst_side);
+        let (sx, sy) = src.src_anchor(slot.src_side);
+        let (ex, ey) = dst.dst_anchor(slot.dst_side);
+        let waypoints = compute_route(sx, sy, slot.src_side, ex, ey, slot.dst_side);
 
-        slots[*idx] = DrawSlot::Ready(DrawObject::Arrow(ResolvedArrow { waypoints }));
+        // Resolve effective arrowhead: per-arrow > global > default
+        let effective_head = slot.head.or(global_arrowhead);
+
+        slots[slot.slot_idx] = DrawSlot::Ready(DrawObject::Arrow(ResolvedArrow {
+            waypoints,
+            head: effective_head,
+            both: slot.both,
+        }));
     }
     Ok(())
 }

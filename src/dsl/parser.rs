@@ -151,6 +151,7 @@ fn parse_command(tokens: &[String], line: usize) -> Result<DslCommand, UnidError
         "hline" => parse_hline(tokens, line),
         "vline" => parse_vline(tokens, line),
         "arrow" => parse_arrow(tokens, line),
+        "arrowhead" => parse_arrowhead(tokens, line),
         _ => Err(UnidError::Parse {
             line,
             message: format!("unknown command '{}'", tokens[0]),
@@ -474,13 +475,47 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
     let (src_id, src_side) = parse_anchor(&tokens[1], line)?;
     let (dst_id, dst_side) = parse_anchor(&tokens[2], line)?;
 
+    let mut head: Option<char> = None;
+    let mut both = false;
+
+    for token in &tokens[3..] {
+        if let Some(v) = strip_option(token, "head") {
+            let ch = v.chars().next().ok_or_else(|| UnidError::Parse {
+                line,
+                message: "head= requires a character value".to_string(),
+            })?;
+            head = Some(ch);
+        } else if token == "both" {
+            both = true;
+        } else {
+            // Ignore unknown options for forward compatibility with lg= etc (S6)
+            break;
+        }
+    }
+
     Ok(DslCommand::Arrow {
         src_id,
         src_side,
         dst_id,
         dst_side,
+        head,
+        both,
         line,
     })
+}
+
+fn parse_arrowhead(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> {
+    if tokens.len() < 2 {
+        return Err(UnidError::Parse {
+            line,
+            message: "arrowhead requires a character (e.g., 'arrowhead ▶')".to_string(),
+        });
+    }
+    let ch = tokens[1].chars().next().ok_or_else(|| UnidError::Parse {
+        line,
+        message: "arrowhead requires a character value".to_string(),
+    })?;
+    Ok(DslCommand::Arrowhead(ch))
 }
 
 /// Parses an anchor reference like "api.right" into ("api", Side::Right).
