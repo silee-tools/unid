@@ -22,11 +22,7 @@ impl Text {
 
     /// Bounding box width (max line width).
     fn bbox_width(&self) -> usize {
-        self.content
-            .lines()
-            .map(width::str_width)
-            .max()
-            .unwrap_or(0)
+        self.content.lines().map(width::str_width).max().unwrap_or(0)
     }
 
     /// Bounding box height (number of lines).

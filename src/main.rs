@@ -8,7 +8,7 @@ use unicode_diagram::cli::{Cli, Commands};
 use unicode_diagram::dsl::command::{CanvasSize, DslCommand};
 use unicode_diagram::dsl::parse;
 use unicode_diagram::error::UnidError;
-use unicode_diagram::object::arrow::{ResolvedArrow, compute_route, compute_self_loop};
+use unicode_diagram::object::arrow::{compute_route, compute_self_loop, ResolvedArrow};
 use unicode_diagram::object::rect::{BorderStyle, ContentAlign, ContentOverflow, Side};
 use unicode_diagram::object::{DrawObject, HLine, Legend, Rect, Text, VLine};
 use unicode_diagram::renderer::Renderer;
@@ -26,9 +26,7 @@ fn main() {
         None => {
             // Default: render from stdin
             if io::stdin().is_terminal() {
-                eprintln!(
-                    "warning: no input provided. Use 'echo \"...\" | unid' or 'unid guide' for details.\n"
-                );
+                eprintln!("warning: no input provided. Use 'echo \"...\" | unid' or 'unid guide' for details.\n");
                 Cli::parse_from(["unid", "--help"]);
                 Ok(())
             } else {
@@ -211,8 +209,12 @@ fn resolve_arrows_into_slots(
     let mut id_anchors: HashMap<String, AnchorSource> = HashMap::new();
     for slot in slots.iter() {
         let (id_opt, source) = match slot {
-            DrawSlot::Ready(DrawObject::Rect(r)) => (r.id.as_ref(), AnchorSource::Rect(r.clone())),
-            DrawSlot::Ready(DrawObject::Text(t)) => (t.id.as_ref(), AnchorSource::Text(t.clone())),
+            DrawSlot::Ready(DrawObject::Rect(r)) => {
+                (r.id.as_ref(), AnchorSource::Rect(r.clone()))
+            }
+            DrawSlot::Ready(DrawObject::Text(t)) => {
+                (t.id.as_ref(), AnchorSource::Text(t.clone()))
+            }
             DrawSlot::Ready(DrawObject::HLine(h)) => {
                 (h.id.as_ref(), AnchorSource::HLine(h.clone()))
             }
@@ -234,18 +236,14 @@ fn resolve_arrows_into_slots(
 
     // Phase 2: Resolve each arrow and replace PendingArrow slots
     for slot in arrow_slots {
-        let src = id_anchors
-            .get(&slot.src_id)
-            .ok_or_else(|| UnidError::Parse {
-                line: slot.line,
-                message: format!("unknown object id '{}' in arrow source", slot.src_id),
-            })?;
-        let dst = id_anchors
-            .get(&slot.dst_id)
-            .ok_or_else(|| UnidError::Parse {
-                line: slot.line,
-                message: format!("unknown object id '{}' in arrow destination", slot.dst_id),
-            })?;
+        let src = id_anchors.get(&slot.src_id).ok_or_else(|| UnidError::Parse {
+            line: slot.line,
+            message: format!("unknown object id '{}' in arrow source", slot.src_id),
+        })?;
+        let dst = id_anchors.get(&slot.dst_id).ok_or_else(|| UnidError::Parse {
+            line: slot.line,
+            message: format!("unknown object id '{}' in arrow destination", slot.dst_id),
+        })?;
 
         let (sx, sy) = src.src_anchor(slot.src_side);
         let (ex, ey) = dst.dst_anchor(slot.dst_side);
@@ -312,8 +310,7 @@ fn run_render() -> Result<(), UnidError> {
     let input = read_stdin()?;
     let commands = parse(&input)?;
     let config = process_commands(commands)?;
-    let (width, height) =
-        compute_canvas_size(config.width, config.height, &config.objects, config.border);
+    let (width, height) = compute_canvas_size(config.width, config.height, &config.objects, config.border);
 
     let canvas = Canvas::new(width, height);
     let mut renderer = Renderer::new(canvas, config.collision);
@@ -352,8 +349,7 @@ fn run_list() -> Result<(), UnidError> {
     let input = read_stdin()?;
     let commands = parse(&input)?;
     let config = process_commands(commands)?;
-    let (width, height) =
-        compute_canvas_size(config.width, config.height, &config.objects, config.border);
+    let (width, height) = compute_canvas_size(config.width, config.height, &config.objects, config.border);
 
     let auto_label = match (config.width, config.height) {
         (CanvasSize::Auto, CanvasSize::Auto) => " (auto)",
@@ -385,8 +381,7 @@ fn run_lint() -> Result<(), UnidError> {
     let input = read_stdin()?;
     let commands = parse(&input)?;
     let config = process_commands(commands)?;
-    let (width, height) =
-        compute_canvas_size(config.width, config.height, &config.objects, config.border);
+    let (width, height) = compute_canvas_size(config.width, config.height, &config.objects, config.border);
 
     println!("Canvas: {}x{}", width, height);
     println!("Collision: {}", if config.collision { "on" } else { "off" });
@@ -481,7 +476,6 @@ DSL SYNTAX:
         [align(a)=<align>] [legend-pos(lp)=top(t)|bottom(b)]
         [legend-overflow(lo)=<mode>] [legend-align(la)=<align>]
         [legend(lg)=<text>] [content(c)=<text>]
-      - W, H: inner size (border excluded). Total: (W+2) x (H+2)
       - "rect" is accepted as an alias for "box"
     text <col> <row> [id=<name>] content(c)=<text>
     hline <col> <row> <length> [id=<name>] [style(s)=<style>] [pos=<pos>]
@@ -522,7 +516,6 @@ ALIGNMENT (align(a)= / legend-align(la)=):
   left(l, default):   Left-aligned (right side truncated/overflows)
   center(c):          Center-aligned (both sides truncated/overflow)
   right(r):           Right-aligned (left side truncated/overflows)
-  Note: arrow legend-align defaults to center(c); all others default to left(l).
 
 LEGEND POSITION:
   Box:      legend-pos(lp)=top(t)|bottom(b)         (default: top)
@@ -565,16 +558,6 @@ ARROWS:
 RENDERING:
   2-pass rendering: structure first (borders, lines), then text (c=, lg=, text).
   Text content always renders on top of structural elements.
-
-TIPS:
-  - canvas auto is recommended — auto-computes minimum canvas size.
-  - Arrow legend is placed near the midpoint of the longest segment.
-    Multiple arrows in the same area may have overlapping legends.
-  - For precise label positioning, use text objects instead of arrow legends:
-      arrow src.b dst.t
-      text 15 7 c=my label
-  - Legend text exceeding canvas bounds is truncated per legend-overflow mode
-    (default: ellipsis). Use lo=overflow to allow overflow beyond canvas edge.
 
 EXAMPLE:
   input:

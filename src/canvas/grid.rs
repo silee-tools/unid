@@ -36,11 +36,7 @@ impl Canvas {
 
     /// Returns the owner object index at (col, row), if any.
     pub fn owner_at(&self, col: usize, row: usize) -> Option<usize> {
-        self.owner
-            .get(row)
-            .and_then(|r| r.get(col))
-            .copied()
-            .flatten()
+        self.owner.get(row).and_then(|r| r.get(col)).copied().flatten()
     }
 
     /// Places a single character at (col, row) owned by `object_idx`.

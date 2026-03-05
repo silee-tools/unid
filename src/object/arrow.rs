@@ -1,6 +1,4 @@
-use crate::object::rect::{ContentAlign, Side};
-use crate::object::{Legend, LegendPos};
-use crate::width;
+use crate::object::rect::Side;
 
 /// Direction of travel along an arrow segment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,10 +25,7 @@ pub fn is_valid_arrowhead(ch: char) -> bool {
 
 /// Returns all valid arrowhead characters (for error messages).
 pub fn valid_arrowhead_chars() -> Vec<char> {
-    ARROWHEAD_FAMILIES
-        .iter()
-        .flat_map(|f| f.iter().copied())
-        .collect()
+    ARROWHEAD_FAMILIES.iter().flat_map(|f| f.iter().copied()).collect()
 }
 
 /// Resolves an arrowhead character to the correct direction variant from its family.
@@ -196,9 +191,11 @@ fn route_parallel(
     if same_direction {
         // Same direction = natural flow: try straight, then Z-shape
         let is_straight = if horizontal {
-            sy == ey && ((src_dir == Dir::Right && ex >= sx) || (src_dir == Dir::Left && ex <= sx))
+            sy == ey
+                && ((src_dir == Dir::Right && ex >= sx) || (src_dir == Dir::Left && ex <= sx))
         } else {
-            sx == ex && ((src_dir == Dir::Down && ey >= sy) || (src_dir == Dir::Up && ey <= sy))
+            sx == ex
+                && ((src_dir == Dir::Down && ey >= sy) || (src_dir == Dir::Up && ey <= sy))
         };
         if is_straight {
             return vec![(sx, sy), (ex, ey)];
@@ -357,70 +354,6 @@ pub fn corner_char(incoming: Dir, outgoing: Dir) -> char {
         (Dir::Up, Dir::Up) | (Dir::Down, Dir::Down) => '│',
         _ => '┼',
     }
-}
-
-/// Computes arrow legend position and column based on waypoints, legend config, and align.
-///
-/// Returns `(col, row, text_width)` — the top-left position where legend text starts,
-/// plus the display width of the legend text.
-pub fn legend_position(wp: &[(usize, usize)], legend: &Legend) -> (usize, usize, usize) {
-    if wp.len() < 2 {
-        return (0, 0, 0);
-    }
-
-    // For bent arrows, pick the longest segment from the second one onwards.
-    let seg_idx = if wp.len() >= 3 {
-        (1..wp.len() - 1)
-            .max_by_key(|&i| {
-                let (fc, fr) = wp[i];
-                let (tc, tr) = wp[i + 1];
-                fc.abs_diff(tc) + fr.abs_diff(tr)
-            })
-            .unwrap_or(1)
-    } else {
-        0
-    };
-
-    let (fc, fr) = wp[seg_idx];
-    let (tc, tr) = wp[seg_idx + 1];
-    let mid_c = (fc + tc) / 2;
-    let mid_r = (fr + tr) / 2;
-    let dir = segment_dir(fc, fr, tc, tr);
-    let is_horizontal = matches!(dir, Dir::Left | Dir::Right);
-
-    let effective_pos = match legend.pos {
-        LegendPos::Auto => {
-            if is_horizontal {
-                LegendPos::Top
-            } else {
-                LegendPos::Right
-            }
-        }
-        other => other,
-    };
-
-    let text_w = width::str_width(&legend.text);
-
-    let (lg_col, lg_row) = match effective_pos {
-        LegendPos::Top | LegendPos::Bottom => {
-            let col = match legend.align {
-                ContentAlign::Left => mid_c,
-                ContentAlign::Center => mid_c.saturating_sub(text_w / 2),
-                ContentAlign::Right => mid_c.saturating_sub(text_w),
-            };
-            let row = if effective_pos == LegendPos::Top {
-                mid_r.saturating_sub(1)
-            } else {
-                mid_r + 1
-            };
-            (col, row)
-        }
-        LegendPos::Left => (mid_c.saturating_sub(text_w + 1), mid_r),
-        LegendPos::Right => (mid_c + 1, mid_r),
-        LegendPos::Auto => unreachable!(),
-    };
-
-    (lg_col, lg_row, text_w)
 }
 
 /// Computes the direction from point (fx,fy) to point (tx,ty).
