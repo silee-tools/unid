@@ -473,14 +473,17 @@ DSL SYNTAX:
   HEADER (required, must appear before objects):
     canvas <w> <h> [border(b)=<style>] [overflow(o)=<mode>] [align(a)=<align>]
     canvas auto [border(b)=<style>]
-    collision on|off
-    arrowhead <char>           Global arrowhead family (optional)
+      - auto: computes minimum size from all object bounds
+      - border is included in the specified size (e.g., 20x5 with border → 18x3 inner)
+    collision on|off               (--collision CLI flag overrides this)
+    arrowhead <char>               Global arrowhead family (optional)
 
   OBJECTS (canvas drawing targets):
     box <col> <row> <w> <h> [id=<name>] [style(s)=<style>] [overflow(o)=<mode>]
         [align(a)=<align>] [legend-pos(lp)=top(t)|bottom(b)]
         [legend-overflow(lo)=<mode>] [legend-align(la)=<align>]
         [legend(lg)=<text>] [content(c)=<text>]
+      - "rect" is accepted as an alias for "box"
     text <col> <row> [id=<name>] content(c)=<text>
     hline <col> <row> <length> [id=<name>] [style(s)=<style>] [pos=<pos>]
         [legend-overflow(lo)=<mode>] [legend-align(la)=<align>] [legend(lg)=<text>]
@@ -488,6 +491,9 @@ DSL SYNTAX:
         [legend-overflow(lo)=<mode>] [legend-align(la)=<align>] [legend(lg)=<text>]
     arrow <src_id>.<side> <dst_id>.<side> [head=<char>] [both] [pos=<pos>]
         [legend-overflow(lo)=<mode>] [legend-align(la)=<align>] [legend(lg)=<text>]
+
+    id= names: alphanumeric, underscore, hyphen only
+    CJK characters (한글, 漢字, かな) take 2 display columns
 
 BORDER STYLES (style(s)= for box):
   light(l, default):  ┌─┐ │ └─┘
@@ -504,6 +510,7 @@ LINE STYLES (style(s)= for hline/vline):
 CONTENT & LEGEND:
   content(c)=         Text inside the object (box inner area, text object)
   legend(lg)=         Text outside/near the object (box, hline, vline, arrow)
+  content(c)= and legend(lg)= must be the last options on a line.
   Use \n for multiline text. Leading/trailing whitespace per line is trimmed.
 
 OVERFLOW MODES (overflow(o)= / legend-overflow(lo)=):
@@ -548,8 +555,9 @@ ARROWS:
     U-shaped:     ──┐        (opposite sides, same axis — ㄷ shape)
                     │
                   ◀─┘
-    Self-loop:    ──┐        (same object, different sides)
-                    └──▼
+    Self-loop:    ──┐        (same object, different sides — ㄷ shape)
+                    │
+                ▲───┘
 
   Source anchor: 1 cell outside border (arrow starts here)
   Dest anchor:   1 cell outside border (arrowhead does not overwrite border)
@@ -612,17 +620,6 @@ EXAMPLE:
     │           └──────────┘                           │
     ╰──────────────────────────────────────────────────╯
 
-NOTES:
-  - "rect" is accepted as an alias for "box" (backward compatibility)
-  - --collision CLI flag overrides DSL collision declaration
-  - Canvas auto computes minimum size from all object bounds
-  - CJK characters (한글, 漢字, かな) take 2 display columns
-  - content= (c=) and lg= (legend=) must be the last options on a line
-  - Use \n in content/legend for literal newlines (leading/trailing spaces trimmed)
-  - Canvas border is included in the specified size (e.g., 20x5 with border → 18x3 inner)
-  - id= names: alphanumeric, underscore, hyphen only
-  - Arrow routing is fully automatic based on anchor sides
-  - Self-loop arrows (same src and dst id) use dedicated ㄷ-shape routing
 "#
     );
 }
