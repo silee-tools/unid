@@ -450,6 +450,9 @@ fn print_guide() {
     print!(
         r#"unid - Unicode Diagram Renderer
 
+A text-based alternative to ASCII diagram editors (Monodraw, ASCIIFlow, etc).
+Renders precise Unicode box-drawing diagrams from a simple DSL via stdin.
+
 USAGE:
   echo "..." | unid          Render from stdin (default)
   echo "..." | unid list    List objects in diagram
