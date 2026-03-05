@@ -5,7 +5,7 @@ CLI tool for rendering ASCII diagrams using Unicode box-drawing characters.
 A text-based alternative to editors like Monodraw or ASCIIFlow.
 Renders precise Unicode box-drawing diagrams from a simple DSL via stdin.
 
-[한국어](docs/README.ko.md)
+[한국어 (Korean)](docs/README.ko.md)
 
 ## Install
 
