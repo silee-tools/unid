@@ -540,25 +540,25 @@ ARROWS:
 
   Options:
     head=<char>       Arrowhead family (auto-resolves direction). Valid families:
-                      →←↑↓ (default)  ▶◀▲▼  ▷◁△▽  ⇒⇐⇑⇓
+                      ▶◀▲▼ (default)  →←↑↓  ▷◁△▽  ⇒⇐⇑⇓
     both              Bidirectional arrow (arrowhead on both ends)
     lg=<text>         Legend text near the arrow
     arrowhead <char>  Global arrowhead family (separate command)
 
-  Arrowhead priority: per-arrow head= > global arrowhead > default (→←↑↓)
+  Arrowhead priority: per-arrow head= > global arrowhead > default (▶◀▲▼)
   Direction auto-resolved: head=▶ on a vertical arrow renders as ▼ or ▲
 
   Route types (auto-selected):
-    Straight:     ──→        (opposite sides, aligned)
+    Straight:     ──▶        (opposite sides, aligned)
     L-shaped:     ──┐        (perpendicular sides, favorable)
-                    ↓
+                    ▼
     Z-shaped:     ──┐        (same direction, not aligned)
-                    └──→
+                    └──▶
     U-shaped:     ──┐        (opposite sides, same axis — ㄷ shape)
                     │
-                  ←─┘
+                  ◀─┘
     Self-loop:    ──┐        (same object, different sides)
-                    └──↓
+                    └──▼
 
   Source anchor: 1 cell outside border (arrow starts here)
   Dest anchor:   1 cell outside border (arrowhead does not overwrite border)
@@ -602,11 +602,11 @@ EXAMPLE:
     │          │                       │               │
     │          │verify                 │query          │
     │          │                       │               │
-    │          ↓                       ↓               │
+    │          ▼                       ▼               │
     │ ╭────────────────╮ sync   ┏━━━━━━━━━━━━┓         │
-    │ │Auth 인증       │───────→┃  Data Store┃──┐      │
+    │ │Auth 인증       │───────▶┃  Data Store┃──┐      │
     │ ╰────────────────╯        ┗━━━━━━━━━━━━┛  │      │
-    │                                  ↑        │      │
+    │                                  ▲        │      │
     │                                  │        │      │
     │                                  └────backup     │
     │                                                  │

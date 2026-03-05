@@ -149,7 +149,7 @@ fn render_anchor_arrow_horizontal() {
          arrow a.r b.l",
     );
     assert!(ok);
-    assert!(stdout.contains('→'));
+    assert!(stdout.contains('▶'));
     assert!(stdout.contains('─'));
 }
 
@@ -163,7 +163,7 @@ fn render_anchor_arrow_vertical() {
          arrow a.b b.t",
     );
     assert!(ok);
-    assert!(stdout.contains('↓'));
+    assert!(stdout.contains('▼'));
     assert!(stdout.contains('│'));
 }
 
@@ -177,7 +177,7 @@ fn render_anchor_arrow_l_shape() {
          arrow a.r b.t",
     );
     assert!(ok);
-    assert!(stdout.contains('→') || stdout.contains('↓'));
+    assert!(stdout.contains('▶') || stdout.contains('▼'));
     assert!(stdout.contains('─') || stdout.contains('│'));
 }
 
@@ -221,7 +221,7 @@ fn render_cjk_mixed_diagram() {
     assert!(ok);
     assert!(stdout.contains("서버"));
     assert!(stdout.contains("DB"));
-    assert!(stdout.contains('→'));
+    assert!(stdout.contains('▶'));
 }
 
 // ─── Collision ───────────────────────────────────────────────────────
@@ -769,8 +769,8 @@ fn arrow_bidirectional() {
          arrow a.r b.l both",
     );
     assert!(ok);
-    // Should have arrowhead at both ends: ← at destination (b.l) and → at source (a.r reversed)
-    assert!(stdout.contains('←'));
+    // Should have arrowhead at both ends: ◀ at destination (b.l) and ▶ at source (a.r reversed)
+    assert!(stdout.contains('◀'));
 }
 
 #[test]
@@ -866,7 +866,7 @@ fn self_loop_right_to_top() {
          arrow a.r a.t",
     );
     assert!(ok);
-    assert!(stdout.contains('↓')); // Arrowhead entering top
+    assert!(stdout.contains('▼')); // Arrowhead entering top
     assert!(stdout.contains('┘')); // Corner from horizontal to vertical
     assert!(stdout.contains('┐')); // Corner from vertical to horizontal
 }
@@ -880,7 +880,7 @@ fn self_loop_bottom_to_left() {
          arrow a.b a.l",
     );
     assert!(ok);
-    assert!(stdout.contains('→')); // Arrowhead entering left
+    assert!(stdout.contains('▶')); // Arrowhead entering left
     assert!(stdout.contains('└')); // Corner
 }
 

@@ -860,28 +860,28 @@ mod tests {
     fn render_horizontal_arrow_right() {
         let arrow = ResolvedArrow { waypoints: vec![(0, 0), (4, 0)], head: None, both: false, legend: None };
         let result = render_objects(5, 1, &[DrawObject::Arrow(arrow)], false);
-        assert_eq!(result, "────→");
+        assert_eq!(result, "────▶");
     }
 
     #[test]
     fn render_horizontal_arrow_left() {
         let arrow = ResolvedArrow { waypoints: vec![(4, 0), (0, 0)], head: None, both: false, legend: None };
         let result = render_objects(5, 1, &[DrawObject::Arrow(arrow)], false);
-        assert_eq!(result, "←────");
+        assert_eq!(result, "◀────");
     }
 
     #[test]
     fn render_vertical_arrow_down() {
         let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 2)], head: None, both: false, legend: None };
         let result = render_objects(1, 3, &[DrawObject::Arrow(arrow)], false);
-        assert_eq!(result, "│\n│\n↓");
+        assert_eq!(result, "│\n│\n▼");
     }
 
     #[test]
     fn render_vertical_arrow_up() {
         let arrow = ResolvedArrow { waypoints: vec![(0, 2), (0, 0)], head: None, both: false, legend: None };
         let result = render_objects(1, 3, &[DrawObject::Arrow(arrow)], false);
-        assert_eq!(result, "↑\n│\n│");
+        assert_eq!(result, "▲\n│\n│");
     }
 
     #[test]
@@ -992,7 +992,7 @@ mod tests {
         // L-shape: right then down via bend at (3,0)
         let arrow = ResolvedArrow { waypoints: vec![(0, 0), (3, 0), (3, 2)], head: None, both: false, legend: None };
         let result = render_objects(4, 3, &[DrawObject::Arrow(arrow)], false);
-        assert_eq!(result, "───┐\n   │\n   ↓");
+        assert_eq!(result, "───┐\n   │\n   ▼");
     }
 
     #[test]
@@ -1003,7 +1003,7 @@ mod tests {
         assert!(result.contains('│'));
         assert!(result.contains('└'));
         assert!(result.contains('┐'));
-        assert!(result.contains('↓'));
+        assert!(result.contains('▼'));
     }
 
     #[test]
@@ -1013,7 +1013,7 @@ mod tests {
         let result = render_objects(5, 4, &[DrawObject::Arrow(arrow)], false);
         assert!(result.contains('└'));
         assert!(result.contains('┘'));
-        assert!(result.contains('↑'));
+        assert!(result.contains('▲'));
     }
 
     #[test]

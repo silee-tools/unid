@@ -12,8 +12,8 @@ pub enum Dir {
 /// Arrowhead families: each entry is [Right, Left, Up, Down].
 /// Only characters belonging to a known family are valid for `head=` / `arrowhead`.
 const ARROWHEAD_FAMILIES: &[[char; 4]] = &[
-    ['→', '←', '↑', '↓'], // default
-    ['▶', '◀', '▲', '▼'], // filled triangle
+    ['▶', '◀', '▲', '▼'], // default (filled triangle)
+    ['→', '←', '↑', '↓'], // arrow
     ['▷', '◁', '△', '▽'], // outline triangle
     ['⇒', '⇐', '⇑', '⇓'], // double arrow
 ];
