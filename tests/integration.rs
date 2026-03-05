@@ -860,9 +860,9 @@ fn text_overwrites_structure() {
 #[test]
 fn self_loop_right_to_top() {
     let (stdout, _, ok) = run_stdin(
-        "canvas 20 6\n\
+        "canvas 20 8\n\
          collision off\n\
-         rect 2 1 8 1 id=a c=Loop\n\
+         rect 2 2 8 1 id=a c=Loop\n\
          arrow a.r a.t",
     );
     assert!(ok);

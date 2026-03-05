@@ -42,15 +42,15 @@ impl Text {
         }
     }
 
-    /// Dest anchor: on bounding box boundary (arrowhead placed here).
+    /// Dest anchor: 1 cell OUTSIDE bounding box (arrowhead does not overwrite content).
     pub fn dst_anchor(&self, side: Side) -> (usize, usize) {
         let w = self.bbox_width();
         let h = self.bbox_height();
         match side {
-            Side::Top => (self.col + w / 2, self.row),
-            Side::Bottom => (self.col + w / 2, self.row + h - 1),
-            Side::Left => (self.col, self.row + h / 2),
-            Side::Right => (self.col + w.saturating_sub(1), self.row + h / 2),
+            Side::Top => (self.col + w / 2, self.row.saturating_sub(1)),
+            Side::Bottom => (self.col + w / 2, self.row + h),
+            Side::Left => (self.col.saturating_sub(1), self.row + h / 2),
+            Side::Right => (self.col + w, self.row + h / 2),
         }
     }
 }

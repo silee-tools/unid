@@ -70,7 +70,7 @@ pub struct Arrow {
 pub struct ResolvedArrow {
     /// Waypoints from source to destination (2..=5 points).
     /// First point = source anchor (outside border).
-    /// Last point = destination anchor (on border).
+    /// Last point = destination anchor (outside border).
     pub waypoints: Vec<(usize, usize)>,
     /// Arrowhead character (any member of a family; resolved to correct direction at render time).
     pub head: Option<char>,
@@ -118,7 +118,7 @@ fn adaptive_gap(sx: usize, sy: usize, ex: usize, ey: usize) -> usize {
 ///
 /// - `(sx, sy)`: source anchor (1 cell outside source border)
 /// - `src_side`: which side of the source rect
-/// - `(ex, ey)`: destination anchor (on destination border)
+/// - `(ex, ey)`: destination anchor (outside destination border)
 /// - `dst_side`: which side of the destination rect
 ///
 /// Returns waypoints including start and end points.
@@ -305,20 +305,28 @@ pub fn compute_self_loop(
     let (p1c, p1r) = extend_point(sx, sy, src_dir, gap);
     let (p2c, p2r) = extend_point(ex, ey, dst_away, gap);
 
-    // If p1 and p2 share an axis, we can do a simple 2-bend
-    if p1c == p2c || p1r == p2r {
+    // Build raw waypoints
+    let raw = if p1c == p2c || p1r == p2r {
+        // If p1 and p2 share an axis, we can do a simple 2-bend
         vec![(sx, sy), (p1c, p1r), (p2c, p2r), (ex, ey)]
     } else {
         // 3-bend: connect via an intermediate segment
-        // Choose the corner path based on src/dst directions
         let src_horizontal = matches!(src_dir, Dir::Left | Dir::Right);
         if src_horizontal {
-            // p1 is on horizontal extension, p2 on vertical extension (or vice versa)
             vec![(sx, sy), (p1c, p1r), (p1c, p2r), (p2c, p2r), (ex, ey)]
         } else {
             vec![(sx, sy), (p1c, p1r), (p2c, p1r), (p2c, p2r), (ex, ey)]
         }
+    };
+
+    // Remove consecutive duplicate waypoints (can happen at canvas edges due to saturating_sub)
+    let mut deduped = Vec::with_capacity(raw.len());
+    for pt in raw {
+        if deduped.last() != Some(&pt) {
+            deduped.push(pt);
+        }
     }
+    deduped
 }
 
 /// Extends a point in the given direction by `distance`.

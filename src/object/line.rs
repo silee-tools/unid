@@ -44,13 +44,14 @@ impl HLine {
         }
     }
 
-    /// Dest anchor: on the line boundary (arrowhead placed here).
+    /// Dest anchor: 1 cell OUTSIDE the line (arrowhead does not overwrite line).
     pub fn dst_anchor(&self, side: Side) -> (usize, usize) {
         let mid = self.col + self.length / 2;
         match side {
-            Side::Top | Side::Bottom => (mid, self.row),
-            Side::Left => (self.col, self.row),
-            Side::Right => (self.col + self.length.saturating_sub(1), self.row),
+            Side::Top => (mid, self.row.saturating_sub(1)),
+            Side::Bottom => (mid, self.row + 1),
+            Side::Left => (self.col.saturating_sub(1), self.row),
+            Side::Right => (self.col + self.length, self.row),
         }
     }
 }
@@ -89,13 +90,14 @@ impl VLine {
         }
     }
 
-    /// Dest anchor: on the line boundary (arrowhead placed here).
+    /// Dest anchor: 1 cell OUTSIDE the line (arrowhead does not overwrite line).
     pub fn dst_anchor(&self, side: Side) -> (usize, usize) {
         let mid = self.row + self.length / 2;
         match side {
-            Side::Top => (self.col, self.row),
-            Side::Bottom => (self.col, self.row + self.length.saturating_sub(1)),
-            Side::Left | Side::Right => (self.col, mid),
+            Side::Top => (self.col, self.row.saturating_sub(1)),
+            Side::Bottom => (self.col, self.row + self.length),
+            Side::Left => (self.col.saturating_sub(1), mid),
+            Side::Right => (self.col + 1, mid),
         }
     }
 }

@@ -99,13 +99,13 @@ impl Rect {
         }
     }
 
-    /// Dest anchor: ON the border (arrowhead replaces border character).
+    /// Dest anchor: 1 cell OUTSIDE the border (arrowhead does not overwrite border).
     pub fn dst_anchor(&self, side: Side) -> (usize, usize) {
         match side {
-            Side::Top => (self.center_col(), self.row),
-            Side::Right => (self.col + self.width + 1, self.center_row()),
-            Side::Bottom => (self.center_col(), self.row + self.height + 1),
-            Side::Left => (self.col, self.center_row()),
+            Side::Top => (self.center_col(), self.row.saturating_sub(1)),
+            Side::Right => (self.col + self.width + 2, self.center_row()),
+            Side::Bottom => (self.center_col(), self.row + self.height + 2),
+            Side::Left => (self.col.saturating_sub(1), self.center_row()),
         }
     }
 }
