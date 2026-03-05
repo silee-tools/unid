@@ -2,10 +2,12 @@
 
 CLI tool for rendering ASCII diagrams using Unicode box-drawing characters.
 
-Monodraw, ASCIIFlow 같은 도구의 텍스트 기반 대안입니다.
-간단한 DSL을 stdin으로 입력하면 정확한 Unicode box-drawing 다이어그램을 렌더링합니다.
+A text-based alternative to editors like Monodraw or ASCIIFlow.
+Renders precise Unicode box-drawing diagrams from a simple DSL via stdin.
 
-## 설치
+[한국어](docs/README.ko.md)
+
+## Install
 
 ### Homebrew (macOS)
 
@@ -13,7 +15,7 @@ Monodraw, ASCIIFlow 같은 도구의 텍스트 기반 대안입니다.
 brew install silee9019/tap/unid
 ```
 
-### 소스 빌드
+### Build from source
 
 ```sh
 git clone https://github.com/silee9019/unicode-diagram.git
@@ -21,18 +23,18 @@ cd unicode-diagram
 cargo install --path .
 ```
 
-## 사용법
+## Usage
 
 ```sh
-echo "..." | unid          # stdin으로 다이어그램 렌더링
-echo "..." | unid list     # 다이어그램 내 객체 목록 출력
-echo "..." | unid lint     # DSL 입력 검증
-unid guide                 # 사용 가이드 출력
+echo "..." | unid          # Render diagram from stdin
+echo "..." | unid list     # List objects in diagram
+echo "..." | unid lint     # Lint DSL input
+unid guide                 # Show usage guide
 ```
 
-## 예시
+## Example
 
-**입력:**
+**Input:**
 
 ```
 canvas auto
@@ -44,7 +46,7 @@ arrow a.r b.l
 arrow b.r c.l
 ```
 
-**출력:**
+**Output:**
 
 ```
 ┌──────────┐    ┌──────────┐    ┌────────┐
@@ -54,15 +56,15 @@ arrow b.r c.l
 └──────────┘    └──────────┘    └────────┘
 ```
 
-## 특징
+## Features
 
-- **자동 너비 계산** — CJK 문자(한글, 漢字, かな) 포함 코딩 폰트 기준 display-column 계산
-- **다양한 테두리 스타일** — single, double, bold, round, dashed 등
-- **DSL 기반** — 텍스트로 다이어그램을 선언적으로 정의
-- **Lint 지원** — DSL 입력의 오류와 경고를 검출
+- **Auto width calculation** — display-column aware rendering for CJK characters (한글, 漢字, かな)
+- **Multiple border styles** — single, double, bold, round, dashed, and more
+- **DSL-based** — declaratively define diagrams as text
+- **Lint support** — detect errors and warnings in DSL input
 
-자세한 사용법은 `unid guide`를 참조하세요.
+See `unid guide` for full documentation.
 
-## 라이선스
+## License
 
 [MIT](LICENSE)
