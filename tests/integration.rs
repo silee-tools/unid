@@ -50,157 +50,40 @@ fn run_subcmd(subcmd: &str, input: &str) -> (String, String, bool) {
     )
 }
 
-// ─── Render (stdin default) ──────────────────────────────────────────
-
-#[test]
-fn render_simple_rect() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 6 3\n\
-         collision off\n\
-         box 0 0 4 1",
-    );
-    assert!(ok);
-    assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
+/// Golden file test: load DSL from fixture, render, compare with expected output.
+macro_rules! golden_test {
+    ($name:ident) => {
+        #[test]
+        fn $name() {
+            let dsl = include_str!(concat!("fixtures/", stringify!($name), ".dsl"));
+            let expected = include_str!(concat!("fixtures/", stringify!($name), ".golden"));
+            let (stdout, stderr, ok) = run_stdin(dsl);
+            assert!(ok, "render failed for {}: {stderr}", stringify!($name));
+            println!("{stdout}");
+            pretty_assertions::assert_eq!(stdout, expected);
+        }
+    };
 }
 
-#[test]
-fn render_rect_with_content() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 12 3\n\
-         collision off\n\
-         box 0 0 10 1 c=Hello",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Hello"));
-    assert!(stdout.contains("┌"));
-    assert!(stdout.contains("└"));
-}
+// ─── Render (golden file tests) ─────────────────────────────────────
 
-#[test]
-fn render_cjk_content() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 14 3\n\
-         collision off\n\
-         box 0 0 12 1 c=한글 테스트",
-    );
-    assert!(ok);
-    assert!(stdout.contains("한글 테스트"));
-}
+golden_test!(render_simple_rect);
+golden_test!(render_rect_with_content);
+golden_test!(render_cjk_content);
+golden_test!(render_auto_canvas);
+golden_test!(render_multiple_styles);
+golden_test!(render_anchor_arrow_horizontal);
+golden_test!(render_anchor_arrow_vertical);
+golden_test!(render_anchor_arrow_l_shape);
+golden_test!(render_anchor_arrow_u_shape);
+golden_test!(render_lines);
+golden_test!(render_cjk_mixed_diagram);
+golden_test!(render_text_object);
+golden_test!(render_complex_architecture_diagram);
 
-#[test]
-fn render_auto_canvas() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas auto\n\
-         collision off\n\
-         box 0 0 4 1",
-    );
-    assert!(ok);
-    assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
-}
+// ─── Collision ──────────────────────────────────────────────────────
 
-#[test]
-fn render_multiple_styles() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 12\n\
-         collision off\n\
-         box 0 0 6 1 s=l\n\
-         box 0 3 6 1 s=h\n\
-         box 0 6 6 1 s=d\n\
-         box 0 9 6 1 s=r",
-    );
-    assert!(ok);
-    assert!(stdout.contains('┌')); // light
-    assert!(stdout.contains('┏')); // heavy
-    assert!(stdout.contains('╔')); // double
-    assert!(stdout.contains('╭')); // rounded
-}
-
-#[test]
-fn render_anchor_arrow_horizontal() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 5\n\
-         collision off\n\
-         box 0 0 6 1 id=a c=A\n\
-         box 18 0 6 1 id=b c=B\n\
-         arrow a.r b.l",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▶'));
-    assert!(stdout.contains('─'));
-}
-
-#[test]
-fn render_anchor_arrow_vertical() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 10\n\
-         collision off\n\
-         box 0 0 6 1 id=a c=A\n\
-         box 0 6 6 1 id=b c=B\n\
-         arrow a.b b.t",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▼'));
-    assert!(stdout.contains('│'));
-}
-
-#[test]
-fn render_anchor_arrow_l_shape() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 10\n\
-         collision off\n\
-         box 0 0 6 1 id=a c=A\n\
-         box 18 6 6 1 id=b c=B\n\
-         arrow a.r b.t",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▶') || stdout.contains('▼'));
-    assert!(stdout.contains('─') || stdout.contains('│'));
-}
-
-#[test]
-fn render_anchor_arrow_u_shape() {
-    // Same side (right→right) → ㄷ-shape
-    let (stdout, _, ok) = run_stdin(
-        "canvas 20 10\n\
-         collision off\n\
-         box 0 0 6 1 id=a c=A\n\
-         box 0 6 6 1 id=b c=B\n\
-         arrow a.r b.r",
-    );
-    assert!(ok);
-    // ㄷ-shape should have corners
-    assert!(stdout.contains('┐') || stdout.contains('┘'));
-}
-
-#[test]
-fn render_lines() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 5\n\
-         collision off\n\
-         hline 0 0 5\n\
-         vline 0 1 4",
-    );
-    assert!(ok);
-    assert!(stdout.contains('─'));
-    assert!(stdout.contains('│'));
-}
-
-#[test]
-fn render_cjk_mixed_diagram() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 10\n\
-         collision off\n\
-         box 0 0 12 1 id=srv c=서버\n\
-         box 18 0 8 1 id=db c=DB\n\
-         arrow srv.r db.l",
-    );
-    assert!(ok);
-    assert!(stdout.contains("서버"));
-    assert!(stdout.contains("DB"));
-    assert!(stdout.contains('▶'));
-}
-
-// ─── Collision ───────────────────────────────────────────────────────
+golden_test!(collision_off_allows_overlap);
 
 #[test]
 fn collision_on_error() {
@@ -215,17 +98,6 @@ fn collision_on_error() {
 }
 
 #[test]
-fn collision_off_allows_overlap() {
-    let (_, _, ok) = run_stdin(
-        "canvas 20 5\n\
-         collision off\n\
-         box 0 0 5 1\n\
-         box 3 0 5 1",
-    );
-    assert!(ok);
-}
-
-#[test]
 fn collision_error_format() {
     let (_, stderr, ok) = run_stdin(
         "canvas 20 5\n\
@@ -234,37 +106,16 @@ fn collision_error_format() {
          box 3 0 5 1",
     );
     assert!(!ok);
-    // Error format: "collision: object #N (...) overlaps object #M (...) at (...) size ..."
     assert!(stderr.contains("object #2"));
     assert!(stderr.contains("object #1"));
     assert!(stderr.contains("overlaps"));
     assert!(stderr.contains("size"));
 }
 
-// ─── Content Overflow ────────────────────────────────────────────────
+// ─── Content Overflow ───────────────────────────────────────────────
 
-#[test]
-fn overflow_ellipsis() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 3\n\
-         collision off\n\
-         box 0 0 4 1 c=VeryLongText",
-    );
-    assert!(ok);
-    assert!(stdout.contains("..12"));
-}
-
-#[test]
-fn overflow_hidden() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 3\n\
-         collision off\n\
-         box 0 0 5 1 overflow=hidden c=HelloWorld",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Hello"));
-    assert!(!stdout.contains("World"));
-}
+golden_test!(overflow_ellipsis);
+golden_test!(overflow_hidden);
 
 #[test]
 fn overflow_error() {
@@ -277,45 +128,16 @@ fn overflow_error() {
     assert!(stderr.contains("overflow"));
 }
 
-// ─── Content Alignment ──────────────────────────────────────────────
+// ─── Content Alignment ─────────────────────────────────────────────
 
-#[test]
-fn align_center() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 12 3\n\
-         collision off\n\
-         box 0 0 10 1 align=c c=Hi",
-    );
-    assert!(ok);
-    // "Hi" (2 cols) centered in 10 cols → pad 4 left
-    assert!(stdout.contains("│    Hi    │"));
-}
-
-#[test]
-fn align_right() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 12 3\n\
-         collision off\n\
-         box 0 0 10 1 align=r c=Hi",
-    );
-    assert!(ok);
-    assert!(stdout.contains("│        Hi│"));
-}
+golden_test!(align_center);
+golden_test!(align_right);
 
 // ─── Canvas Border ──────────────────────────────────────────────────
 
-#[test]
-fn canvas_border_rounded() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 3 border=r\n\
-         collision off",
-    );
-    assert!(ok);
-    assert!(stdout.contains('╭'));
-    assert!(stdout.contains('╯'));
-}
+golden_test!(canvas_border_rounded);
 
-// ─── List ────────────────────────────────────────────────────────────
+// ─── List ───────────────────────────────────────────────────────────
 
 #[test]
 fn list_subcommand() {
@@ -346,7 +168,7 @@ fn list_auto_canvas() {
     assert!(stdout.contains("(auto)"));
 }
 
-// ─── Lint ────────────────────────────────────────────────────────────
+// ─── Lint ───────────────────────────────────────────────────────────
 
 #[test]
 fn lint_ok() {
@@ -442,241 +264,6 @@ fn error_invalid_arrow_anchor() {
     assert!(stderr.contains("invalid anchor"));
 }
 
-// ─── Comments and blank lines ───────────────────────────────────────
-
-#[test]
-fn comments_and_blank_lines() {
-    let (stdout, _, ok) = run_stdin(
-        "# This is a comment\n\
-         canvas 6 3\n\
-         \n\
-         collision off\n\
-         # Another comment\n\
-         box 0 0 4 1",
-    );
-    assert!(ok);
-    assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
-}
-
-// ─── Text object ────────────────────────────────────────────────────
-
-#[test]
-fn render_text_object() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 20 3\n\
-         collision off\n\
-         text 0 0 c=Hello World",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Hello World"));
-}
-
-// ─── Backward compatibility ─────────────────────────────────────────
-
-#[test]
-fn rect_alias_for_box() {
-    // "rect" is accepted as an alias for "box"
-    let (stdout, _, ok) = run_stdin(
-        "canvas 6 3\n\
-         collision off\n\
-         rect 0 0 4 1",
-    );
-    assert!(ok);
-    assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
-}
-
-// ─── Shorthand options ──────────────────────────────────────────────
-
-#[test]
-fn shorthand_style() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 8 3\n\
-         collision off\n\
-         box 0 0 6 1 style=rounded",
-    );
-    assert!(ok);
-    assert!(stdout.contains('╭'));
-}
-
-#[test]
-fn content_with_newline_escape() {
-    // \n in content is unescaped to a real newline by the parser.
-    // Multiline content renders each line on a separate row.
-    let (stdout, _, ok) = run_stdin(
-        "canvas 12 5\n\
-         collision off\n\
-         box 0 0 10 3 c=Line1\\nLine2",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Line1"));
-    assert!(stdout.contains("Line2"));
-}
-
-#[test]
-fn multiline_rect_vertical_center() {
-    // 2 lines in inner_h=3 → vertically centered
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 5\n\
-         collision off\n\
-         box 0 0 8 3 align=c c=AA\\nBB",
-    );
-    assert!(ok);
-    // inner_h=3, line_count=2, start_row = 0+1+(3-2)/2 = 1+0 = 1
-    // But (3-2)/2 = 0, so lines are at rows 1 and 2 (top of inner area)
-    // Actually: start_row = row+1 + (3-2)/2 = 1+0 = 1
-    assert!(stdout.contains("AA"));
-    assert!(stdout.contains("BB"));
-}
-
-#[test]
-fn multiline_text_object() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 3\n\
-         collision off\n\
-         text 0 0 c=Hello\\nWorld",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Hello"));
-    assert!(stdout.contains("World"));
-}
-
-// ─── Legend ─────────────────────────────────────────────────────────
-
-#[test]
-fn rect_legend_top() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 14 4\n\
-         collision off\n\
-         box 0 1 10 1 lg=Title",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Title"));
-    assert!(stdout.contains("┌"));
-}
-
-#[test]
-fn rect_legend_bottom() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 14 5\n\
-         collision off\n\
-         box 0 0 10 1 legend-pos=b lg=Footer",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Footer"));
-}
-
-#[test]
-fn rect_legend_lr_error() {
-    let (_, stderr, ok) = run_stdin(
-        "canvas 20 5\n\
-         collision off\n\
-         box 0 0 10 1 legend-pos=l lg=Bad",
-    );
-    assert!(!ok);
-    assert!(stderr.contains("legend-pos only supports top"));
-}
-
-#[test]
-fn rect_content_and_legend() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 14 4\n\
-         collision off\n\
-         box 0 1 10 1 c=Content lg=Title",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Content"));
-    assert!(stdout.contains("Title"));
-}
-
-#[test]
-fn hline_legend_top() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 15 3\n\
-         collision off\n\
-         hline 0 1 10 lg=separator",
-    );
-    assert!(ok);
-    assert!(stdout.contains("separator"));
-    assert!(stdout.contains("─"));
-}
-
-#[test]
-fn vline_legend_right() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 15 5\n\
-         collision off\n\
-         vline 0 0 4 lg=axis",
-    );
-    assert!(ok);
-    assert!(stdout.contains("axis"));
-    assert!(stdout.contains("│"));
-}
-
-#[test]
-fn hline_with_id() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 15 3\n\
-         collision off\n\
-         hline 0 1 10 id=sep",
-    );
-    assert!(ok);
-    assert!(stdout.contains("─"));
-}
-
-// ─── Arrow from non-rect objects ────────────────────────────────────
-
-#[test]
-fn arrow_from_hline() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 5\n\
-         collision off\n\
-         hline 0 2 10 id=sep\n\
-         box 18 0 6 1 id=b c=B\n\
-         arrow sep.r b.l",
-    );
-    assert!(ok);
-    assert!(stdout.contains('→') || stdout.contains('─'));
-}
-
-#[test]
-fn arrow_from_text() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 5\n\
-         collision off\n\
-         text 0 1 id=lbl c=Label\n\
-         box 18 0 6 1 id=b c=B\n\
-         arrow lbl.r b.l",
-    );
-    assert!(ok);
-    assert!(stdout.contains('→') || stdout.contains('─'));
-}
-
-#[test]
-fn arrow_from_vline() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 20 10\n\
-         collision off\n\
-         vline 0 0 5 id=axis\n\
-         box 10 6 6 1 id=b c=B\n\
-         arrow axis.b b.t",
-    );
-    assert!(ok);
-    assert!(stdout.contains('↓') || stdout.contains('│'));
-}
-
-// ─── Rect ID ────────────────────────────────────────────────────────
-
-#[test]
-fn rect_with_id() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 5\n\
-         collision off\n\
-         box 0 0 8 1 id=mybox c=Hello",
-    );
-    assert!(ok);
-    assert!(stdout.contains("Hello"));
-}
-
 #[test]
 fn duplicate_id_error() {
     let (_, stderr, ok) = run_stdin(
@@ -687,82 +274,6 @@ fn duplicate_id_error() {
     );
     assert!(!ok);
     assert!(stderr.contains("duplicate"));
-}
-
-// ─── S5: Arrowhead + Bidirectional ──────────────────────────────────
-
-#[test]
-fn arrow_custom_head() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 3\n\
-         collision off\n\
-         box 0 0 4 1 id=a c=A\n\
-         box 20 0 4 1 id=b c=B\n\
-         arrow a.r b.l head=▶",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▶'));
-    // Should NOT contain default arrowhead
-    assert!(!stdout.contains('→'));
-}
-
-#[test]
-fn arrow_global_arrowhead() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 3\n\
-         collision off\n\
-         arrowhead ▶\n\
-         box 0 0 4 1 id=a c=A\n\
-         box 20 0 4 1 id=b c=B\n\
-         arrow a.r b.l",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▶'));
-}
-
-#[test]
-fn arrow_per_arrow_overrides_global() {
-    // global=▶ family, per-arrow=⇒ family. Per-arrow wins → ⇒ (right direction)
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 3\n\
-         collision off\n\
-         arrowhead ▶\n\
-         box 0 0 4 1 id=a c=A\n\
-         box 20 0 4 1 id=b c=B\n\
-         arrow a.r b.l head=⇒",
-    );
-    assert!(ok);
-    assert!(stdout.contains('⇒'), "per-arrow head should override global");
-    assert!(!stdout.contains('▶'), "global arrowhead should not appear");
-}
-
-#[test]
-fn arrow_bidirectional() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 3\n\
-         collision off\n\
-         box 0 0 4 1 id=a c=A\n\
-         box 20 0 4 1 id=b c=B\n\
-         arrow a.r b.l both",
-    );
-    assert!(ok);
-    // Should have arrowhead at both ends: ◀ at destination (b.l) and ▶ at source (a.r reversed)
-    assert!(stdout.contains('◀'));
-}
-
-#[test]
-fn arrow_bidirectional_with_custom_head() {
-    // a.r→b.l: horizontal right. head=▶ family: dst=▶ (right), src=◀ (left)
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 3\n\
-         collision off\n\
-         box 0 0 4 1 id=a c=A\n\
-         box 20 0 4 1 id=b c=B\n\
-         arrow a.r b.l both head=▶",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▶'), "dst should have ▶ (right direction)");
-    assert!(stdout.contains('◀'), "src (both) should have ◀ (left direction)");
 }
 
 #[test]
@@ -779,97 +290,70 @@ fn arrow_invalid_arrowhead_rejected() {
 }
 
 #[test]
-fn arrow_head_resolves_direction_vertical() {
-    // Vertical arrow with head=▶ family: dst should be ▼ (down direction)
-    let (stdout, _, ok) = run_stdin(
-        "canvas 20 12\n\
+fn rect_legend_lr_error() {
+    let (_, stderr, ok) = run_stdin(
+        "canvas 20 5\n\
          collision off\n\
-         box 2 0 6 1 id=a c=A\n\
-         box 2 8 6 1 id=b c=B\n\
-         arrow a.b b.t head=▶",
+         box 0 0 10 1 legend-pos=l lg=Bad",
     );
-    assert!(ok);
-    assert!(stdout.contains('▼'), "vertical dst should resolve to ▼");
+    assert!(!ok);
+    assert!(stderr.contains("legend-pos only supports top"));
 }
 
-// ─── S6: Arrow Legend ───────────────────────────────────────────────
+// ─── Comments and blank lines ───────────────────────────────────────
 
-#[test]
-fn arrow_legend_horizontal() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 5\n\
-         collision off\n\
-         box 0 1 4 1 id=a c=A\n\
-         box 20 1 4 1 id=b c=B\n\
-         arrow a.r b.l lg=request",
-    );
-    assert!(ok);
-    assert!(stdout.contains("request"));
-}
+golden_test!(comments_and_blank_lines);
 
-#[test]
-fn arrow_legend_with_pos() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 30 5\n\
-         collision off\n\
-         box 0 1 4 1 id=a c=A\n\
-         box 20 1 4 1 id=b c=B\n\
-         arrow a.r b.l pos=b lg=data",
-    );
-    assert!(ok);
-    assert!(stdout.contains("data"));
-}
+// ─── Backward compatibility ─────────────────────────────────────────
 
-#[test]
-fn text_overwrites_structure() {
-    // Text rendered in pass 2 should overwrite border from pass 1
-    let (stdout, _, ok) = run_stdin(
-        "canvas 10 3\n\
-         collision off\n\
-         box 0 0 8 1\n\
-         text 0 0 c=X",
-    );
-    assert!(ok);
-    // 'X' should overwrite the top-left corner '┌'
-    assert!(stdout.starts_with('X'));
-}
+golden_test!(rect_alias_for_box);
 
-#[test]
-fn self_loop_right_to_top() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 20 8\n\
-         collision off\n\
-         box 2 2 8 1 id=a c=Loop\n\
-         arrow a.r a.t",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▼')); // Arrowhead entering top
-    assert!(stdout.contains('┘')); // Corner from horizontal to vertical
-    assert!(stdout.contains('┐')); // Corner from vertical to horizontal
-}
+// ─── Shorthand options ──────────────────────────────────────────────
 
-#[test]
-fn self_loop_bottom_to_left() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 20 8\n\
-         collision off\n\
-         box 2 2 8 1 id=a c=Loop\n\
-         arrow a.b a.l",
-    );
-    assert!(ok);
-    assert!(stdout.contains('▶')); // Arrowhead entering left
-    assert!(stdout.contains('└')); // Corner
-}
+golden_test!(shorthand_style);
+golden_test!(content_with_newline_escape);
+golden_test!(multiline_rect_vertical_center);
+golden_test!(multiline_text_object);
 
-#[test]
-fn arrow_legend_vertical() {
-    let (stdout, _, ok) = run_stdin(
-        "canvas 20 12\n\
-         collision off\n\
-         box 2 0 6 1 id=a c=A\n\
-         box 2 8 6 1 id=b c=B\n\
-         arrow a.b b.t lg=flow",
-    );
-    assert!(ok);
-    assert!(stdout.contains("flow"));
-}
+// ─── Legend ──────────────────────────────────────────────────────────
+
+golden_test!(rect_legend_top);
+golden_test!(rect_legend_bottom);
+golden_test!(rect_content_and_legend);
+golden_test!(hline_legend_top);
+golden_test!(vline_legend_right);
+golden_test!(hline_with_id);
+
+// ─── Arrow from non-rect objects ────────────────────────────────────
+
+golden_test!(arrow_from_hline);
+golden_test!(arrow_from_text);
+golden_test!(arrow_from_vline);
+
+// ─── Rect ID ────────────────────────────────────────────────────────
+
+golden_test!(rect_with_id);
+
+// ─── Arrowhead + Bidirectional ──────────────────────────────────────
+
+golden_test!(arrow_custom_head);
+golden_test!(arrow_global_arrowhead);
+golden_test!(arrow_per_arrow_overrides_global);
+golden_test!(arrow_bidirectional);
+golden_test!(arrow_bidirectional_with_custom_head);
+golden_test!(arrow_head_resolves_direction_vertical);
+
+// ─── Arrow Legend ───────────────────────────────────────────────────
+
+golden_test!(arrow_legend_horizontal);
+golden_test!(arrow_legend_with_pos);
+golden_test!(arrow_legend_vertical);
+
+// ─── Text overwrite ─────────────────────────────────────────────────
+
+golden_test!(text_overwrites_structure);
+
+// ─── Self-loop ──────────────────────────────────────────────────────
+
+golden_test!(self_loop_right_to_top);
+golden_test!(self_loop_bottom_to_left);

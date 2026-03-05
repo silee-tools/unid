@@ -9,6 +9,10 @@ run = "cargo build"
 description = "Run tests"
 run = "cargo test"
 
+[tasks.test-render]
+description = "Run render tests with visible diagram output"
+run = "cargo test render_complex -- --nocapture"
+
 [tasks.lint]
 description = "Run clippy linter"
 run = "cargo clippy -- -D warnings"
