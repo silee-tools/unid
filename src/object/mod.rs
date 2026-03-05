@@ -21,7 +21,7 @@ pub enum LegendPos {
     Auto,
 }
 
-/// Legend (external label) for rect, hline, vline, arrow.
+/// Legend (external label) for box, hline, vline, arrow.
 #[derive(Debug, Clone)]
 pub struct Legend {
     pub text: String,
@@ -84,7 +84,7 @@ impl DrawObject {
     /// Returns a display name for the object type.
     pub fn type_name(&self) -> &'static str {
         match self {
-            DrawObject::Rect(_) => "rect",
+            DrawObject::Rect(_) => "box",
             DrawObject::Text(_) => "text",
             DrawObject::HLine(_) => "hline",
             DrawObject::VLine(_) => "vline",
@@ -96,7 +96,7 @@ impl DrawObject {
     pub fn collision_desc(&self) -> String {
         match self {
             DrawObject::Rect(r) => {
-                format!("rect at ({},{}) {}x{}", r.col, r.row, r.outer_width(), r.outer_height())
+                format!("box at ({},{}) {}x{}", r.col, r.row, r.outer_width(), r.outer_height())
             }
             DrawObject::Text(t) => {
                 format!("text at ({},{}) w={}", t.col, t.row, width::str_width(&t.content))
@@ -116,7 +116,7 @@ impl DrawObject {
             DrawObject::Rect(r) => {
                 let content = r.content.as_deref().unwrap_or("");
                 format!(
-                    "rect ({},{}) {}x{} {:?}{}",
+                    "box ({},{}) {}x{} {:?}{}",
                     r.col,
                     r.row,
                     r.width,

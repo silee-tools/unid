@@ -147,7 +147,7 @@ fn parse_command(tokens: &[String], line: usize) -> Result<DslCommand, UnidError
     match keyword.as_str() {
         "canvas" => parse_canvas(tokens, line),
         "collision" => parse_collision(tokens, line),
-        "rect" => parse_rect(tokens, line),
+        "box" | "rect" => parse_rect(tokens, line),
         "text" => parse_text(tokens, line),
         "hline" => parse_hline(tokens, line),
         "vline" => parse_vline(tokens, line),
@@ -237,7 +237,7 @@ fn parse_rect(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> {
     if tokens.len() < 5 {
         return Err(UnidError::Parse {
             line,
-            message: "rect requires col, row, width, height".to_string(),
+            message: "box requires col, row, width, height".to_string(),
         });
     }
 
@@ -275,7 +275,7 @@ fn parse_rect(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> {
             if pos == LegendPos::Left || pos == LegendPos::Right {
                 return Err(UnidError::Parse {
                     line,
-                    message: "rect legend-pos only supports top(t) or bottom(b)".to_string(),
+                    message: "box legend-pos only supports top(t) or bottom(b)".to_string(),
                 });
             }
             lg_pos = Some(pos);
@@ -290,7 +290,7 @@ fn parse_rect(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> {
         } else {
             return Err(UnidError::Parse {
                 line,
-                message: format!("unknown rect option '{}'", token),
+                message: format!("unknown box option '{}'", token),
             });
         }
     }
@@ -679,12 +679,12 @@ fn parse_line_style(s: &str, line: usize) -> Result<LineStyle, UnidError> {
     match s.to_lowercase().as_str() {
         "light" | "l" => Ok(LineStyle::Light),
         "heavy" | "h" => Ok(LineStyle::Heavy),
-        "double" | "d" => Ok(LineStyle::Double),
+        "double" | "do" => Ok(LineStyle::Double),
         "dash" | "da" => Ok(LineStyle::Dash),
         _ => Err(UnidError::Parse {
             line,
             message: format!(
-                "unknown line style '{}' (expected light/l, heavy/h, double/d, dash/da)",
+                "unknown line style '{}' (expected light/l, heavy/h, double/do, dash/da)",
                 s
             ),
         }),
@@ -818,8 +818,8 @@ mod tests {
     }
 
     #[test]
-    fn parse_rect_basic() {
-        let cmds = parse("rect 0 0 10 3").unwrap();
+    fn parse_box_basic() {
+        let cmds = parse("box 0 0 10 3").unwrap();
         match &cmds[0] {
             DslCommand::Object(DrawObject::Rect(r)) => {
                 assert_eq!((r.col, r.row, r.width, r.height), (0, 0, 10, 3));
@@ -831,8 +831,15 @@ mod tests {
     }
 
     #[test]
-    fn parse_rect_with_content_and_style() {
-        let cmds = parse("rect 0 0 10 3 s=r c=Hello World").unwrap();
+    fn parse_box_rect_alias() {
+        // "rect" is accepted as an alias for "box"
+        let cmds = parse("rect 0 0 10 3").unwrap();
+        assert!(matches!(cmds[0], DslCommand::Object(DrawObject::Rect(_))));
+    }
+
+    #[test]
+    fn parse_box_with_content_and_style() {
+        let cmds = parse("box 0 0 10 3 s=r c=Hello World").unwrap();
         match &cmds[0] {
             DslCommand::Object(DrawObject::Rect(r)) => {
                 assert_eq!(r.content.as_deref(), Some("Hello World"));
@@ -843,8 +850,8 @@ mod tests {
     }
 
     #[test]
-    fn parse_rect_shorthand() {
-        let cmds = parse("rect 0 0 10 3 s=h c=Test").unwrap();
+    fn parse_box_shorthand() {
+        let cmds = parse("box 0 0 10 3 s=h c=Test").unwrap();
         match &cmds[0] {
             DslCommand::Object(DrawObject::Rect(r)) => {
                 assert_eq!(r.style, BorderStyle::Heavy);
@@ -855,8 +862,8 @@ mod tests {
     }
 
     #[test]
-    fn parse_rect_with_overflow_options() {
-        let cmds = parse("rect 0 0 10 3 overflow=hidden align=r c=Text").unwrap();
+    fn parse_box_with_overflow_options() {
+        let cmds = parse("box 0 0 10 3 overflow=hidden align=r c=Text").unwrap();
         match &cmds[0] {
             DslCommand::Object(DrawObject::Rect(r)) => {
                 assert_eq!(r.content_overflow, ContentOverflow::Hidden);
@@ -969,8 +976,8 @@ mod tests {
     }
 
     #[test]
-    fn parse_rect_with_id() {
-        let cmds = parse("rect 0 0 10 3 id=api c=API").unwrap();
+    fn parse_box_with_id() {
+        let cmds = parse("box 0 0 10 3 id=api c=API").unwrap();
         match &cmds[0] {
             DslCommand::Object(DrawObject::Rect(r)) => {
                 assert_eq!(r.id.as_deref(), Some("api"));
@@ -981,8 +988,8 @@ mod tests {
     }
 
     #[test]
-    fn parse_rect_invalid_id() {
-        let result = parse("rect 0 0 10 3 id=a@b");
+    fn parse_box_invalid_id() {
+        let result = parse("box 0 0 10 3 id=a@b");
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("invalid id"));
@@ -997,7 +1004,7 @@ canvas 20 5
 collision on
 
 # Another comment
-rect 0 0 5 2
+box 0 0 5 2
 ";
         let cmds = parse(input).unwrap();
         assert_eq!(cmds.len(), 3);
@@ -1008,7 +1015,7 @@ rect 0 0 5 2
         let cmds = parse("CANVAS 20 5").unwrap();
         assert!(matches!(cmds[0], DslCommand::Canvas { .. }));
 
-        let cmds = parse("Rect 0 0 5 2").unwrap();
+        let cmds = parse("Box 0 0 5 2").unwrap();
         assert!(matches!(cmds[0], DslCommand::Object(DrawObject::Rect(_))));
     }
 
@@ -1023,7 +1030,7 @@ rect 0 0 5 2
 
     #[test]
     fn parse_error_invalid_number() {
-        let result = parse("rect abc 0 5 2");
+        let result = parse("box abc 0 5 2");
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("invalid col"));
@@ -1031,7 +1038,7 @@ rect 0 0 5 2
 
     #[test]
     fn parse_error_missing_args() {
-        let result = parse("rect 0 0");
+        let result = parse("box 0 0");
         assert!(result.is_err());
     }
 }

@@ -81,7 +81,7 @@ fn render_simple_rect() {
     let (stdout, _, ok) = run_stdin(
         "canvas 6 3\n\
          collision off\n\
-         rect 0 0 4 1",
+         box 0 0 4 1",
     );
     assert!(ok);
     assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
@@ -92,7 +92,7 @@ fn render_rect_with_content() {
     let (stdout, _, ok) = run_stdin(
         "canvas 12 3\n\
          collision off\n\
-         rect 0 0 10 1 c=Hello",
+         box 0 0 10 1 c=Hello",
     );
     assert!(ok);
     assert!(stdout.contains("Hello"));
@@ -105,7 +105,7 @@ fn render_cjk_content() {
     let (stdout, _, ok) = run_stdin(
         "canvas 14 3\n\
          collision off\n\
-         rect 0 0 12 1 c=한글 테스트",
+         box 0 0 12 1 c=한글 테스트",
     );
     assert!(ok);
     assert!(stdout.contains("한글 테스트"));
@@ -116,7 +116,7 @@ fn render_auto_canvas() {
     let (stdout, _, ok) = run_stdin(
         "canvas auto\n\
          collision off\n\
-         rect 0 0 4 1",
+         box 0 0 4 1",
     );
     assert!(ok);
     assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
@@ -127,10 +127,10 @@ fn render_multiple_styles() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 12\n\
          collision off\n\
-         rect 0 0 6 1 s=l\n\
-         rect 0 3 6 1 s=h\n\
-         rect 0 6 6 1 s=d\n\
-         rect 0 9 6 1 s=r",
+         box 0 0 6 1 s=l\n\
+         box 0 3 6 1 s=h\n\
+         box 0 6 6 1 s=d\n\
+         box 0 9 6 1 s=r",
     );
     assert!(ok);
     assert!(stdout.contains('┌')); // light
@@ -144,8 +144,8 @@ fn render_anchor_arrow_horizontal() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 5\n\
          collision off\n\
-         rect 0 0 6 1 id=a c=A\n\
-         rect 18 0 6 1 id=b c=B\n\
+         box 0 0 6 1 id=a c=A\n\
+         box 18 0 6 1 id=b c=B\n\
          arrow a.r b.l",
     );
     assert!(ok);
@@ -158,8 +158,8 @@ fn render_anchor_arrow_vertical() {
     let (stdout, _, ok) = run_stdin(
         "canvas 10 10\n\
          collision off\n\
-         rect 0 0 6 1 id=a c=A\n\
-         rect 0 6 6 1 id=b c=B\n\
+         box 0 0 6 1 id=a c=A\n\
+         box 0 6 6 1 id=b c=B\n\
          arrow a.b b.t",
     );
     assert!(ok);
@@ -172,8 +172,8 @@ fn render_anchor_arrow_l_shape() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 10\n\
          collision off\n\
-         rect 0 0 6 1 id=a c=A\n\
-         rect 18 6 6 1 id=b c=B\n\
+         box 0 0 6 1 id=a c=A\n\
+         box 18 6 6 1 id=b c=B\n\
          arrow a.r b.t",
     );
     assert!(ok);
@@ -187,8 +187,8 @@ fn render_anchor_arrow_u_shape() {
     let (stdout, _, ok) = run_stdin(
         "canvas 20 10\n\
          collision off\n\
-         rect 0 0 6 1 id=a c=A\n\
-         rect 0 6 6 1 id=b c=B\n\
+         box 0 0 6 1 id=a c=A\n\
+         box 0 6 6 1 id=b c=B\n\
          arrow a.r b.r",
     );
     assert!(ok);
@@ -214,8 +214,8 @@ fn render_cjk_mixed_diagram() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 10\n\
          collision off\n\
-         rect 0 0 12 1 id=srv c=서버\n\
-         rect 18 0 8 1 id=db c=DB\n\
+         box 0 0 12 1 id=srv c=서버\n\
+         box 18 0 8 1 id=db c=DB\n\
          arrow srv.r db.l",
     );
     assert!(ok);
@@ -231,8 +231,8 @@ fn collision_on_error() {
     let (_, stderr, ok) = run_stdin(
         "canvas 20 5\n\
          collision on\n\
-         rect 0 0 5 1\n\
-         rect 3 0 5 1",
+         box 0 0 5 1\n\
+         box 3 0 5 1",
     );
     assert!(!ok);
     assert!(stderr.contains("collision"));
@@ -243,8 +243,8 @@ fn collision_off_allows_overlap() {
     let (_, _, ok) = run_stdin(
         "canvas 20 5\n\
          collision off\n\
-         rect 0 0 5 1\n\
-         rect 3 0 5 1",
+         box 0 0 5 1\n\
+         box 3 0 5 1",
     );
     assert!(ok);
 }
@@ -255,8 +255,8 @@ fn collision_cli_override() {
     let (_, _, ok) = run_with_collision(
         "canvas 20 5\n\
          collision on\n\
-         rect 0 0 5 1\n\
-         rect 3 0 5 1",
+         box 0 0 5 1\n\
+         box 3 0 5 1",
         "off",
     );
     assert!(ok);
@@ -267,8 +267,8 @@ fn collision_error_format() {
     let (_, stderr, ok) = run_stdin(
         "canvas 20 5\n\
          collision on\n\
-         rect 0 0 5 1\n\
-         rect 3 0 5 1",
+         box 0 0 5 1\n\
+         box 3 0 5 1",
     );
     assert!(!ok);
     // Error format: "collision: object #N (...) overlaps object #M (...) at (...) size ..."
@@ -285,7 +285,7 @@ fn overflow_ellipsis() {
     let (stdout, _, ok) = run_stdin(
         "canvas 10 3\n\
          collision off\n\
-         rect 0 0 4 1 c=VeryLongText",
+         box 0 0 4 1 c=VeryLongText",
     );
     assert!(ok);
     assert!(stdout.contains("..12"));
@@ -296,7 +296,7 @@ fn overflow_hidden() {
     let (stdout, _, ok) = run_stdin(
         "canvas 10 3\n\
          collision off\n\
-         rect 0 0 5 1 overflow=hidden c=HelloWorld",
+         box 0 0 5 1 overflow=hidden c=HelloWorld",
     );
     assert!(ok);
     assert!(stdout.contains("Hello"));
@@ -308,7 +308,7 @@ fn overflow_error() {
     let (_, stderr, ok) = run_stdin(
         "canvas 10 3\n\
          collision off\n\
-         rect 0 0 3 1 overflow=error c=VeryLong",
+         box 0 0 3 1 overflow=error c=VeryLong",
     );
     assert!(!ok);
     assert!(stderr.contains("overflow"));
@@ -321,7 +321,7 @@ fn align_center() {
     let (stdout, _, ok) = run_stdin(
         "canvas 12 3\n\
          collision off\n\
-         rect 0 0 10 1 align=c c=Hi",
+         box 0 0 10 1 align=c c=Hi",
     );
     assert!(ok);
     // "Hi" (2 cols) centered in 10 cols → pad 4 left
@@ -333,7 +333,7 @@ fn align_right() {
     let (stdout, _, ok) = run_stdin(
         "canvas 12 3\n\
          collision off\n\
-         rect 0 0 10 1 align=r c=Hi",
+         box 0 0 10 1 align=r c=Hi",
     );
     assert!(ok);
     assert!(stdout.contains("│        Hi│"));
@@ -360,14 +360,14 @@ fn list_subcommand() {
         "list",
         "canvas 30 5\n\
          collision on\n\
-         rect 0 0 8 1 c=Box\n\
+         box 0 0 8 1 c=Box\n\
          text 15 1 c=Hi",
     );
     assert!(ok);
     assert!(stdout.contains("Canvas: 30x5"));
     assert!(stdout.contains("Collision: on"));
     assert!(stdout.contains("Objects: 2"));
-    assert!(stdout.contains("rect"));
+    assert!(stdout.contains("box"));
     assert!(stdout.contains("text"));
 }
 
@@ -377,7 +377,7 @@ fn list_auto_canvas() {
         "list",
         "canvas auto\n\
          collision off\n\
-         rect 0 0 4 1",
+         box 0 0 4 1",
     );
     assert!(ok);
     assert!(stdout.contains("(auto)"));
@@ -391,7 +391,7 @@ fn lint_ok() {
         "lint",
         "canvas 10 3\n\
          collision off\n\
-         rect 0 0 4 1",
+         box 0 0 4 1",
     );
     assert!(ok);
     assert!(stdout.contains("OK"));
@@ -403,8 +403,8 @@ fn lint_collision_error() {
         "lint",
         "canvas 10 5\n\
          collision on\n\
-         rect 0 0 5 1\n\
-         rect 3 0 5 1",
+         box 0 0 5 1\n\
+         box 3 0 5 1",
     );
     assert!(!ok);
     assert!(stdout.contains("Errors:"));
@@ -420,7 +420,7 @@ fn guide_subcommand() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("USAGE:"));
     assert!(stdout.contains("DSL SYNTAX:"));
-    assert!(stdout.contains("BORDER STYLES:"));
+    assert!(stdout.contains("BORDER STYLES"));
 }
 
 // ─── Error cases ────────────────────────────────────────────────────
@@ -429,7 +429,7 @@ fn guide_subcommand() {
 fn error_missing_canvas() {
     let (_, stderr, ok) = run_stdin(
         "collision on\n\
-         rect 0 0 4 1",
+         box 0 0 4 1",
     );
     assert!(!ok);
     assert!(stderr.contains("canvas"));
@@ -439,7 +439,7 @@ fn error_missing_canvas() {
 fn error_missing_collision() {
     let (_, stderr, ok) = run_stdin(
         "canvas 10 5\n\
-         rect 0 0 4 1",
+         box 0 0 4 1",
     );
     assert!(!ok);
     assert!(stderr.contains("collision"));
@@ -461,7 +461,7 @@ fn error_unknown_arrow_id() {
     let (_, stderr, ok) = run_stdin(
         "canvas 20 5\n\
          collision off\n\
-         rect 0 0 4 1 id=a\n\
+         box 0 0 4 1 id=a\n\
          arrow a.r nonexistent.l",
     );
     assert!(!ok);
@@ -489,7 +489,7 @@ fn comments_and_blank_lines() {
          \n\
          collision off\n\
          # Another comment\n\
-         rect 0 0 4 1",
+         box 0 0 4 1",
     );
     assert!(ok);
     assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
@@ -508,6 +508,20 @@ fn render_text_object() {
     assert!(stdout.contains("Hello World"));
 }
 
+// ─── Backward compatibility ─────────────────────────────────────────
+
+#[test]
+fn rect_alias_for_box() {
+    // "rect" is accepted as an alias for "box"
+    let (stdout, _, ok) = run_stdin(
+        "canvas 6 3\n\
+         collision off\n\
+         rect 0 0 4 1",
+    );
+    assert!(ok);
+    assert_eq!(stdout.trim(), "┌────┐\n│    │\n└────┘");
+}
+
 // ─── Shorthand options ──────────────────────────────────────────────
 
 #[test]
@@ -515,7 +529,7 @@ fn shorthand_style() {
     let (stdout, _, ok) = run_stdin(
         "canvas 8 3\n\
          collision off\n\
-         rect 0 0 6 1 style=rounded",
+         box 0 0 6 1 style=rounded",
     );
     assert!(ok);
     assert!(stdout.contains('╭'));
@@ -528,7 +542,7 @@ fn content_with_newline_escape() {
     let (stdout, _, ok) = run_stdin(
         "canvas 12 5\n\
          collision off\n\
-         rect 0 0 10 3 c=Line1\\nLine2",
+         box 0 0 10 3 c=Line1\\nLine2",
     );
     assert!(ok);
     assert!(stdout.contains("Line1"));
@@ -541,7 +555,7 @@ fn multiline_rect_vertical_center() {
     let (stdout, _, ok) = run_stdin(
         "canvas 10 5\n\
          collision off\n\
-         rect 0 0 8 3 align=c c=AA\\nBB",
+         box 0 0 8 3 align=c c=AA\\nBB",
     );
     assert!(ok);
     // inner_h=3, line_count=2, start_row = 0+1+(3-2)/2 = 1+0 = 1
@@ -570,7 +584,7 @@ fn rect_legend_top() {
     let (stdout, _, ok) = run_stdin(
         "canvas 14 4\n\
          collision off\n\
-         rect 0 1 10 1 lg=Title",
+         box 0 1 10 1 lg=Title",
     );
     assert!(ok);
     assert!(stdout.contains("Title"));
@@ -582,7 +596,7 @@ fn rect_legend_bottom() {
     let (stdout, _, ok) = run_stdin(
         "canvas 14 5\n\
          collision off\n\
-         rect 0 0 10 1 legend-pos=b lg=Footer",
+         box 0 0 10 1 legend-pos=b lg=Footer",
     );
     assert!(ok);
     assert!(stdout.contains("Footer"));
@@ -593,7 +607,7 @@ fn rect_legend_lr_error() {
     let (_, stderr, ok) = run_stdin(
         "canvas 20 5\n\
          collision off\n\
-         rect 0 0 10 1 legend-pos=l lg=Bad",
+         box 0 0 10 1 legend-pos=l lg=Bad",
     );
     assert!(!ok);
     assert!(stderr.contains("legend-pos only supports top"));
@@ -604,7 +618,7 @@ fn rect_content_and_legend() {
     let (stdout, _, ok) = run_stdin(
         "canvas 14 4\n\
          collision off\n\
-         rect 0 1 10 1 c=Content lg=Title",
+         box 0 1 10 1 c=Content lg=Title",
     );
     assert!(ok);
     assert!(stdout.contains("Content"));
@@ -654,7 +668,7 @@ fn arrow_from_hline() {
         "canvas 30 5\n\
          collision off\n\
          hline 0 2 10 id=sep\n\
-         rect 18 0 6 1 id=b c=B\n\
+         box 18 0 6 1 id=b c=B\n\
          arrow sep.r b.l",
     );
     assert!(ok);
@@ -667,7 +681,7 @@ fn arrow_from_text() {
         "canvas 30 5\n\
          collision off\n\
          text 0 1 id=lbl c=Label\n\
-         rect 18 0 6 1 id=b c=B\n\
+         box 18 0 6 1 id=b c=B\n\
          arrow lbl.r b.l",
     );
     assert!(ok);
@@ -680,7 +694,7 @@ fn arrow_from_vline() {
         "canvas 20 10\n\
          collision off\n\
          vline 0 0 5 id=axis\n\
-         rect 10 6 6 1 id=b c=B\n\
+         box 10 6 6 1 id=b c=B\n\
          arrow axis.b b.t",
     );
     assert!(ok);
@@ -694,7 +708,7 @@ fn rect_with_id() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 5\n\
          collision off\n\
-         rect 0 0 8 1 id=mybox c=Hello",
+         box 0 0 8 1 id=mybox c=Hello",
     );
     assert!(ok);
     assert!(stdout.contains("Hello"));
@@ -705,8 +719,8 @@ fn duplicate_id_error() {
     let (_, stderr, ok) = run_stdin(
         "canvas 20 5\n\
          collision off\n\
-         rect 0 0 4 1 id=a\n\
-         rect 10 0 4 1 id=a",
+         box 0 0 4 1 id=a\n\
+         box 10 0 4 1 id=a",
     );
     assert!(!ok);
     assert!(stderr.contains("duplicate"));
@@ -719,8 +733,8 @@ fn arrow_custom_head() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 3\n\
          collision off\n\
-         rect 0 0 4 1 id=a c=A\n\
-         rect 20 0 4 1 id=b c=B\n\
+         box 0 0 4 1 id=a c=A\n\
+         box 20 0 4 1 id=b c=B\n\
          arrow a.r b.l head=▶",
     );
     assert!(ok);
@@ -735,8 +749,8 @@ fn arrow_global_arrowhead() {
         "canvas 30 3\n\
          collision off\n\
          arrowhead ▶\n\
-         rect 0 0 4 1 id=a c=A\n\
-         rect 20 0 4 1 id=b c=B\n\
+         box 0 0 4 1 id=a c=A\n\
+         box 20 0 4 1 id=b c=B\n\
          arrow a.r b.l",
     );
     assert!(ok);
@@ -750,8 +764,8 @@ fn arrow_per_arrow_overrides_global() {
         "canvas 30 3\n\
          collision off\n\
          arrowhead ▶\n\
-         rect 0 0 4 1 id=a c=A\n\
-         rect 20 0 4 1 id=b c=B\n\
+         box 0 0 4 1 id=a c=A\n\
+         box 20 0 4 1 id=b c=B\n\
          arrow a.r b.l head=⇒",
     );
     assert!(ok);
@@ -764,8 +778,8 @@ fn arrow_bidirectional() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 3\n\
          collision off\n\
-         rect 0 0 4 1 id=a c=A\n\
-         rect 20 0 4 1 id=b c=B\n\
+         box 0 0 4 1 id=a c=A\n\
+         box 20 0 4 1 id=b c=B\n\
          arrow a.r b.l both",
     );
     assert!(ok);
@@ -779,8 +793,8 @@ fn arrow_bidirectional_with_custom_head() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 3\n\
          collision off\n\
-         rect 0 0 4 1 id=a c=A\n\
-         rect 20 0 4 1 id=b c=B\n\
+         box 0 0 4 1 id=a c=A\n\
+         box 20 0 4 1 id=b c=B\n\
          arrow a.r b.l both head=▶",
     );
     assert!(ok);
@@ -793,8 +807,8 @@ fn arrow_invalid_arrowhead_rejected() {
     let (_, stderr, ok) = run_stdin(
         "canvas 30 3\n\
          collision off\n\
-         rect 0 0 4 1 id=a c=A\n\
-         rect 20 0 4 1 id=b c=B\n\
+         box 0 0 4 1 id=a c=A\n\
+         box 20 0 4 1 id=b c=B\n\
          arrow a.r b.l head=◆",
     );
     assert!(!ok);
@@ -807,8 +821,8 @@ fn arrow_head_resolves_direction_vertical() {
     let (stdout, _, ok) = run_stdin(
         "canvas 20 12\n\
          collision off\n\
-         rect 2 0 6 1 id=a c=A\n\
-         rect 2 8 6 1 id=b c=B\n\
+         box 2 0 6 1 id=a c=A\n\
+         box 2 8 6 1 id=b c=B\n\
          arrow a.b b.t head=▶",
     );
     assert!(ok);
@@ -822,8 +836,8 @@ fn arrow_legend_horizontal() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 5\n\
          collision off\n\
-         rect 0 1 4 1 id=a c=A\n\
-         rect 20 1 4 1 id=b c=B\n\
+         box 0 1 4 1 id=a c=A\n\
+         box 20 1 4 1 id=b c=B\n\
          arrow a.r b.l lg=request",
     );
     assert!(ok);
@@ -835,8 +849,8 @@ fn arrow_legend_with_pos() {
     let (stdout, _, ok) = run_stdin(
         "canvas 30 5\n\
          collision off\n\
-         rect 0 1 4 1 id=a c=A\n\
-         rect 20 1 4 1 id=b c=B\n\
+         box 0 1 4 1 id=a c=A\n\
+         box 20 1 4 1 id=b c=B\n\
          arrow a.r b.l pos=b lg=data",
     );
     assert!(ok);
@@ -849,7 +863,7 @@ fn text_overwrites_structure() {
     let (stdout, _, ok) = run_stdin(
         "canvas 10 3\n\
          collision off\n\
-         rect 0 0 8 1\n\
+         box 0 0 8 1\n\
          text 0 0 c=X",
     );
     assert!(ok);
@@ -862,7 +876,7 @@ fn self_loop_right_to_top() {
     let (stdout, _, ok) = run_stdin(
         "canvas 20 8\n\
          collision off\n\
-         rect 2 2 8 1 id=a c=Loop\n\
+         box 2 2 8 1 id=a c=Loop\n\
          arrow a.r a.t",
     );
     assert!(ok);
@@ -876,7 +890,7 @@ fn self_loop_bottom_to_left() {
     let (stdout, _, ok) = run_stdin(
         "canvas 20 8\n\
          collision off\n\
-         rect 2 2 8 1 id=a c=Loop\n\
+         box 2 2 8 1 id=a c=Loop\n\
          arrow a.b a.l",
     );
     assert!(ok);
@@ -889,8 +903,8 @@ fn arrow_legend_vertical() {
     let (stdout, _, ok) = run_stdin(
         "canvas 20 12\n\
          collision off\n\
-         rect 2 0 6 1 id=a c=A\n\
-         rect 2 8 6 1 id=b c=B\n\
+         box 2 0 6 1 id=a c=A\n\
+         box 2 8 6 1 id=b c=B\n\
          arrow a.b b.t lg=flow",
     );
     assert!(ok);

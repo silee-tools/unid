@@ -30,7 +30,7 @@ pub enum UnidError {
         overlap_h: usize,
     },
 
-    #[error("content overflow: '{label}' ({label_width} cols) exceeds rect inner width ({inner_width} cols)")]
+    #[error("content overflow: '{label}' ({label_width} cols) exceeds box inner width ({inner_width} cols)")]
     LabelOverflow {
         label: String,
         label_width: usize,

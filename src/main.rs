@@ -471,69 +471,61 @@ DSL SYNTAX:
   Commands are case-insensitive. Each command is on its own line.
 
   HEADER (required, must appear before objects):
-    canvas <width> <height> [border=<style>] [overflow=<mode>] [align=<align>]
-    canvas auto [border=<style>]
+    canvas <w> <h> [border(b)=<style>] [overflow(o)=<mode>] [align(a)=<align>]
+    canvas auto [border(b)=<style>]
     collision on|off
+    arrowhead <char>           Global arrowhead family (optional)
 
-  OBJECTS:
-    rect <col> <row> <w> <h> [id=<name>] [s=<style>] [overflow=<mode>] [align=<align>]
-         [legend-pos=<top|bottom>] [lg=<legend>] [c=<content>]
-    text <col> <row> [id=<name>] c=<content>
-    hline <col> <row> <length> [id=<name>] [s=<style>] [pos=<pos>] [lg=<legend>]
-    vline <col> <row> <length> [id=<name>] [s=<style>] [pos=<pos>] [lg=<legend>]
-    arrow <src_id>.<side> <dst_id>.<side> [head=<char>] [both] [pos=<pos>] [lg=<legend>]
-    arrowhead <char>
+  OBJECTS (canvas drawing targets):
+    box <col> <row> <w> <h> [id=<name>] [style(s)=<style>] [overflow(o)=<mode>]
+        [align(a)=<align>] [legend-pos(lp)=top(t)|bottom(b)]
+        [legend-overflow(lo)=<mode>] [legend-align(la)=<align>]
+        [legend(lg)=<text>] [content(c)=<text>]
+    text <col> <row> [id=<name>] content(c)=<text>
+    hline <col> <row> <length> [id=<name>] [style(s)=<style>] [pos=<pos>]
+        [legend-overflow(lo)=<mode>] [legend-align(la)=<align>] [legend(lg)=<text>]
+    vline <col> <row> <length> [id=<name>] [style(s)=<style>] [pos=<pos>]
+        [legend-overflow(lo)=<mode>] [legend-align(la)=<align>] [legend(lg)=<text>]
+    arrow <src_id>.<side> <dst_id>.<side> [head=<char>] [both] [pos=<pos>]
+        [legend-overflow(lo)=<mode>] [legend-align(la)=<align>] [legend(lg)=<text>]
 
-  SHORTHAND:
-    s=  → style=       c=  → content=       lg= → legend=
-    o=  → overflow=    a=  → align=         b=  → border=
-    pos= → position=   lp= → legend-pos=
-    lo= → legend-overflow=  la= → legend-align=
-    Style values: l=light h=heavy d=double r=rounded
-    Line style:   l=light h=heavy d=double da=dash
-    Overflow values: el=ellipsis o=overflow h=hidden er=error
-    Align values: l=left c=center r=right
-    Side values: t=top r=right b=bottom l=left
-    Position values: t=top r=right b=bottom l=left a=auto
+BORDER STYLES (style(s)= for box):
+  light(l, default):  ┌─┐ │ └─┘
+  heavy(h):           ┏━┓ ┃ ┗━┛
+  double(d):          ╔═╗ ║ ╚═╝
+  rounded(r):         ╭─╮ │ ╰─╯
 
-BORDER STYLES:
-  light/l (default):  ┌─┐ │ └─┘
-  heavy/h:            ┏━┓ ┃ ┗━┛
-  double/d:           ╔═╗ ║ ╚═╝
-  rounded/r:          ╭─╮ │ ╰─╯
-
-LINE STYLES:
-  light/l (default):  ─ │
-  heavy/h:            ━ ┃
-  double/d:           ═ ║
-  dash:               ╌ ╎
+LINE STYLES (style(s)= for hline/vline):
+  light(l, default):  ─ │
+  heavy(h):           ━ ┃
+  double(do):         ═ ║
+  dash(da):           ╌ ╎
 
 CONTENT & LEGEND:
-  c= (content=)       Text inside the object (rect inner area, text object)
-  lg= (legend=)       Text outside/near the object (rect, hline, vline, arrow)
-  Use \n for multiline text in both c= and lg= values
-  Leading/trailing whitespace per line is trimmed automatically
+  content(c)=         Text inside the object (box inner area, text object)
+  legend(lg)=         Text outside/near the object (box, hline, vline, arrow)
+  Use \n for multiline text. Leading/trailing whitespace per line is trimmed.
 
-CONTENT OVERFLOW MODES:
-  ellipsis (default): Truncate with "prefix..{{N}}" where N=truncated display width
-  overflow:           Content overwrites borders
-  hidden:             Truncate without indicator
-  error:              Return error if content exceeds width
+OVERFLOW MODES (overflow(o)= / legend-overflow(lo)=):
+  ellipsis(el, default): Truncate with "prefix..{{N}}" where N=truncated display width
+  overflow(o):           Content overwrites borders
+  hidden(h):             Truncate without indicator
+  error(er):             Return error if content exceeds width
 
-CONTENT ALIGNMENT:
-  left/l (default):   Left-aligned (right side truncated/overflows)
-  center/c:           Center-aligned (both sides truncated/overflow)
-  right/r:            Right-aligned (left side truncated/overflows)
+ALIGNMENT (align(a)= / legend-align(la)=):
+  left(l, default):   Left-aligned (right side truncated/overflows)
+  center(c):          Center-aligned (both sides truncated/overflow)
+  right(r):           Right-aligned (left side truncated/overflows)
 
 LEGEND POSITION:
-  Rect:     legend-pos=top(t)|bottom(b)    (default: top)
-  HLine:    pos=top(t)|bottom(b)|...   (default: top)
-  VLine:    pos=left(l)|right(r)|...   (default: right)
-  Arrow:    pos=top(t)|bottom(b)|...   (default: auto — horizontal=top, vertical=right)
+  Box:      legend-pos(lp)=top(t)|bottom(b)         (default: top)
+  HLine:    pos=top(t)|bottom(b)|left(l)|right(r)   (default: top)
+  VLine:    pos=left(l)|right(r)|top(t)|bottom(b)   (default: right)
+  Arrow:    pos=top(t)|bottom(b)|left(l)|right(r)|auto(a)  (default: auto)
 
 ARROWS:
   Arrows connect objects by id and side (anchor point).
-  Any object with id= can be an arrow endpoint (rect, text, hline, vline).
+  Any object with id= can be an arrow endpoint (box, text, hline, vline).
   Routing is automatic based on source/destination sides.
 
   Syntax: arrow <src_id>.<side> <dst_id>.<side> [head=<char>] [both] [lg=<text>]
@@ -543,9 +535,8 @@ ARROWS:
                       ▶◀▲▼ (default)  →←↑↓  ▷◁△▽  ⇒⇐⇑⇓
     both              Bidirectional arrow (arrowhead on both ends)
     lg=<text>         Legend text near the arrow
-    arrowhead <char>  Global arrowhead family (separate command)
 
-  Arrowhead priority: per-arrow head= > global arrowhead > default (▶◀▲▼)
+  Arrowhead priority: per-arrow head= > global arrowhead command > default (▶◀▲▼)
   Direction auto-resolved: head=▶ on a vertical arrow renders as ▼ or ▲
 
   Route types (auto-selected):
@@ -572,10 +563,10 @@ EXAMPLE:
     echo "canvas 52 27 border=r
     collision off
     # Boxes with legend and arrow labels
-    rect 2 2 16 1 id=api s=d align=c lg=Server c=API Gateway
-    rect 28 2 12 1 id=web align=c c=Web Client
-    rect 2 10 16 1 id=auth s=r c=Auth 인증
-    rect 28 10 12 1 id=db s=h align=r c=Data Store
+    box 2 2 16 1 id=api s=d align=c lg=Server c=API Gateway
+    box 28 2 12 1 id=web align=c c=Web Client
+    box 2 10 16 1 id=auth s=r c=Auth 인증
+    box 28 10 12 1 id=db s=h align=r c=Data Store
     # Arrows with legend labels and custom head
     arrow api.r web.l both head=▶ lg=HTTP
     arrow api.b auth.t lg=verify
@@ -586,11 +577,11 @@ EXAMPLE:
     # Separator + overflow demos
     hline 2 18 48 s=dash lg=Features
     text 2 20 c=ellipsis:
-    rect 12 20 10 1 c=LongServiceName
+    box 12 20 10 1 c=LongServiceName
     text 26 20 c=overflow:
-    rect 36 20 10 1 overflow=overflow c=LongServiceName
+    box 36 20 10 1 overflow=overflow c=LongServiceName
     text 2 23 c=hidden:
-    rect 12 23 10 1 overflow=hidden c=LongServiceName" | unid
+    box 12 23 10 1 overflow=hidden c=LongServiceName" | unid
 
   output:
     ╭──────────────────────────────────────────────────╮
@@ -622,6 +613,7 @@ EXAMPLE:
     ╰──────────────────────────────────────────────────╯
 
 NOTES:
+  - "rect" is accepted as an alias for "box" (backward compatibility)
   - --collision CLI flag overrides DSL collision declaration
   - Canvas auto computes minimum size from all object bounds
   - CJK characters (한글, 漢字, かな) take 2 display columns
