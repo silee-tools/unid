@@ -477,7 +477,7 @@ DSL SYNTAX:
 
   OBJECTS:
     rect <col> <row> <w> <h> [id=<name>] [s=<style>] [overflow=<mode>] [align=<align>]
-         [lg-pos=<top|bottom>] [lg=<legend>] [c=<content>]
+         [legend-pos=<top|bottom>] [lg=<legend>] [c=<content>]
     text <col> <row> [id=<name>] c=<content>
     hline <col> <row> <length> [id=<name>] [s=<style>] [pos=<pos>] [lg=<legend>]
     vline <col> <row> <length> [id=<name>] [s=<style>] [pos=<pos>] [lg=<legend>]
@@ -486,7 +486,11 @@ DSL SYNTAX:
 
   SHORTHAND:
     s=  → style=       c=  → content=       lg= → legend=
+    o=  → overflow=    a=  → align=         b=  → border=
+    pos= → position=   lp= → legend-pos=
+    lo= → legend-overflow=  la= → legend-align=
     Style values: l=light h=heavy d=double r=rounded
+    Line style:   l=light h=heavy d=double da=dash
     Overflow values: el=ellipsis o=overflow h=hidden er=error
     Align values: l=left c=center r=right
     Side values: t=top r=right b=bottom l=left
@@ -522,7 +526,7 @@ CONTENT ALIGNMENT:
   right/r:            Right-aligned (left side truncated/overflows)
 
 LEGEND POSITION:
-  Rect:     lg-pos=top(t)|bottom(b)    (default: top)
+  Rect:     legend-pos=top(t)|bottom(b)    (default: top)
   HLine:    pos=top(t)|bottom(b)|...   (default: top)
   VLine:    pos=left(l)|right(r)|...   (default: right)
   Arrow:    pos=top(t)|bottom(b)|...   (default: auto — horizontal=top, vertical=right)

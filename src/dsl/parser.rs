@@ -188,13 +188,14 @@ fn parse_canvas(tokens: &[String], line: usize) -> Result<DslCommand, UnidError>
     let mut content_align = None;
 
     for token in &tokens[opts_start..] {
-        if let Some(v) = strip_option(token, "border") {
+        if let Some(v) = strip_option(token, "border").or_else(|| strip_option(token, "b")) {
             border = Some(parse_border_style(v, line)?);
-        } else if let Some(v) = strip_option(token, "overflow")
+        } else if let Some(v) =
+            strip_option(token, "overflow").or_else(|| strip_option(token, "o"))
         {
             content_overflow = Some(parse_content_overflow(v, line)?);
         } else if let Some(v) =
-            strip_option(token, "align")
+            strip_option(token, "align").or_else(|| strip_option(token, "a"))
         {
             content_align = Some(parse_content_align(v, line)?);
         } else {
@@ -261,23 +262,30 @@ fn parse_rect(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> {
             rect.id = Some(v.to_string());
         } else if let Some(v) = strip_option(token, "style").or_else(|| strip_option(token, "s")) {
             rect.style = parse_border_style(v, line)?;
-        } else if let Some(v) = strip_option(token, "overflow") {
+        } else if let Some(v) = strip_option(token, "overflow").or_else(|| strip_option(token, "o"))
+        {
             rect.content_overflow = parse_content_overflow(v, line)?;
-        } else if let Some(v) = strip_option(token, "align") {
+        } else if let Some(v) = strip_option(token, "align").or_else(|| strip_option(token, "a")) {
             rect.content_align = parse_content_align(v, line)?;
-        } else if let Some(v) = strip_option(token, "lg-pos") {
+        } else if let Some(v) =
+            strip_option(token, "legend-pos").or_else(|| strip_option(token, "lp"))
+        {
             let pos = parse_legend_pos(v, line)?;
             // Rect only allows top/bottom
             if pos == LegendPos::Left || pos == LegendPos::Right {
                 return Err(UnidError::Parse {
                     line,
-                    message: "rect lg-pos only supports top(t) or bottom(b)".to_string(),
+                    message: "rect legend-pos only supports top(t) or bottom(b)".to_string(),
                 });
             }
             lg_pos = Some(pos);
-        } else if let Some(v) = strip_option(token, "lg-overflow") {
+        } else if let Some(v) =
+            strip_option(token, "legend-overflow").or_else(|| strip_option(token, "lo"))
+        {
             lg_overflow = Some(parse_content_overflow(v, line)?);
-        } else if let Some(v) = strip_option(token, "lg-align") {
+        } else if let Some(v) =
+            strip_option(token, "legend-align").or_else(|| strip_option(token, "la"))
+        {
             lg_align = Some(parse_content_align(v, line)?);
         } else {
             return Err(UnidError::Parse {
@@ -376,9 +384,13 @@ fn parse_hline(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
             hline.id = Some(v.to_string());
         } else if let Some(v) = strip_option(token, "pos").or_else(|| strip_option(token, "position")) {
             lg_pos = Some(parse_legend_pos(v, line)?);
-        } else if let Some(v) = strip_option(token, "lg-overflow") {
+        } else if let Some(v) =
+            strip_option(token, "legend-overflow").or_else(|| strip_option(token, "lo"))
+        {
             lg_overflow = Some(parse_content_overflow(v, line)?);
-        } else if let Some(v) = strip_option(token, "lg-align") {
+        } else if let Some(v) =
+            strip_option(token, "legend-align").or_else(|| strip_option(token, "la"))
+        {
             lg_align = Some(parse_content_align(v, line)?);
         } else {
             return Err(UnidError::Parse {
@@ -434,9 +446,13 @@ fn parse_vline(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
             vline.id = Some(v.to_string());
         } else if let Some(v) = strip_option(token, "pos").or_else(|| strip_option(token, "position")) {
             lg_pos = Some(parse_legend_pos(v, line)?);
-        } else if let Some(v) = strip_option(token, "lg-overflow") {
+        } else if let Some(v) =
+            strip_option(token, "legend-overflow").or_else(|| strip_option(token, "lo"))
+        {
             lg_overflow = Some(parse_content_overflow(v, line)?);
-        } else if let Some(v) = strip_option(token, "lg-align") {
+        } else if let Some(v) =
+            strip_option(token, "legend-align").or_else(|| strip_option(token, "la"))
+        {
             lg_align = Some(parse_content_align(v, line)?);
         } else {
             return Err(UnidError::Parse {
@@ -509,9 +525,13 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
             both = true;
         } else if let Some(v) = strip_option(token, "pos").or_else(|| strip_option(token, "position")) {
             lg_pos = Some(parse_legend_pos(v, line)?);
-        } else if let Some(v) = strip_option(token, "lg-overflow") {
+        } else if let Some(v) =
+            strip_option(token, "legend-overflow").or_else(|| strip_option(token, "lo"))
+        {
             lg_overflow = Some(parse_content_overflow(v, line)?);
-        } else if let Some(v) = strip_option(token, "lg-align") {
+        } else if let Some(v) =
+            strip_option(token, "legend-align").or_else(|| strip_option(token, "la"))
+        {
             lg_align = Some(parse_content_align(v, line)?);
         } else {
             return Err(UnidError::Parse {
@@ -660,11 +680,11 @@ fn parse_line_style(s: &str, line: usize) -> Result<LineStyle, UnidError> {
         "light" | "l" => Ok(LineStyle::Light),
         "heavy" | "h" => Ok(LineStyle::Heavy),
         "double" | "d" => Ok(LineStyle::Double),
-        "dash" => Ok(LineStyle::Dash),
+        "dash" | "da" => Ok(LineStyle::Dash),
         _ => Err(UnidError::Parse {
             line,
             message: format!(
-                "unknown line style '{}' (expected light/l, heavy/h, double/d, dash)",
+                "unknown line style '{}' (expected light/l, heavy/h, double/d, dash/da)",
                 s
             ),
         }),

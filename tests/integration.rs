@@ -582,7 +582,7 @@ fn rect_legend_bottom() {
     let (stdout, _, ok) = run_stdin(
         "canvas 14 5\n\
          collision off\n\
-         rect 0 0 10 1 lg-pos=b lg=Footer",
+         rect 0 0 10 1 legend-pos=b lg=Footer",
     );
     assert!(ok);
     assert!(stdout.contains("Footer"));
@@ -593,10 +593,10 @@ fn rect_legend_lr_error() {
     let (_, stderr, ok) = run_stdin(
         "canvas 20 5\n\
          collision off\n\
-         rect 0 0 10 1 lg-pos=l lg=Bad",
+         rect 0 0 10 1 legend-pos=l lg=Bad",
     );
     assert!(!ok);
-    assert!(stderr.contains("lg-pos only supports top"));
+    assert!(stderr.contains("legend-pos only supports top"));
 }
 
 #[test]
