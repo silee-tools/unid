@@ -15,10 +15,13 @@ import (
 	"github.com/silee9019/unicode-diagram/internal/renderer"
 )
 
+var version = "dev"
+
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "unid",
-		Short: "Unicode box-drawing diagram renderer",
+		Use:     "unid",
+		Short:   "Unicode box-drawing diagram renderer",
+		Version: version,
 		Long: `Unicode box-drawing diagram renderer.
 
 A text-based alternative to ASCII diagram editors like Monodraw or ASCIIFlow.

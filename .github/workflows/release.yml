@@ -35,7 +35,7 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: "0"
-        run: go build -trimpath -ldflags="-s -w" -o unid ./cmd/unid
+        run: go build -trimpath -ldflags="-s -w -X main.version=${GITHUB_REF_NAME#v}" -o unid ./cmd/unid
 
       - name: Package binary
         run: |
