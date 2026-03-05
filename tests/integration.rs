@@ -745,17 +745,18 @@ fn arrow_global_arrowhead() {
 
 #[test]
 fn arrow_per_arrow_overrides_global() {
+    // global=▶ family, per-arrow=⇒ family. Per-arrow wins → ⇒ (right direction)
     let (stdout, _, ok) = run_stdin(
         "canvas 30 3\n\
          collision off\n\
          arrowhead ▶\n\
          rect 0 0 4 1 id=a c=A\n\
          rect 20 0 4 1 id=b c=B\n\
-         arrow a.r b.l head=◆",
+         arrow a.r b.l head=⇒",
     );
     assert!(ok);
-    assert!(stdout.contains('◆'));
-    assert!(!stdout.contains('▶'));
+    assert!(stdout.contains('⇒'), "per-arrow head should override global");
+    assert!(!stdout.contains('▶'), "global arrowhead should not appear");
 }
 
 #[test]
@@ -774,17 +775,44 @@ fn arrow_bidirectional() {
 
 #[test]
 fn arrow_bidirectional_with_custom_head() {
+    // a.r→b.l: horizontal right. head=▶ family: dst=▶ (right), src=◀ (left)
     let (stdout, _, ok) = run_stdin(
         "canvas 30 3\n\
          collision off\n\
          rect 0 0 4 1 id=a c=A\n\
          rect 20 0 4 1 id=b c=B\n\
-         arrow a.r b.l both head=◆",
+         arrow a.r b.l both head=▶",
     );
     assert!(ok);
-    // Custom head on both ends
-    let head_count = stdout.chars().filter(|&c| c == '◆').count();
-    assert_eq!(head_count, 2, "Expected 2 custom arrowheads, got {}", head_count);
+    assert!(stdout.contains('▶'), "dst should have ▶ (right direction)");
+    assert!(stdout.contains('◀'), "src (both) should have ◀ (left direction)");
+}
+
+#[test]
+fn arrow_invalid_arrowhead_rejected() {
+    let (_, stderr, ok) = run_stdin(
+        "canvas 30 3\n\
+         collision off\n\
+         rect 0 0 4 1 id=a c=A\n\
+         rect 20 0 4 1 id=b c=B\n\
+         arrow a.r b.l head=◆",
+    );
+    assert!(!ok);
+    assert!(stderr.contains("invalid arrowhead"));
+}
+
+#[test]
+fn arrow_head_resolves_direction_vertical() {
+    // Vertical arrow with head=▶ family: dst should be ▼ (down direction)
+    let (stdout, _, ok) = run_stdin(
+        "canvas 20 12\n\
+         collision off\n\
+         rect 2 0 6 1 id=a c=A\n\
+         rect 2 8 6 1 id=b c=B\n\
+         arrow a.b b.t head=▶",
+    );
+    assert!(ok);
+    assert!(stdout.contains('▼'), "vertical dst should resolve to ▼");
 }
 
 // ─── S6: Arrow Legend ───────────────────────────────────────────────

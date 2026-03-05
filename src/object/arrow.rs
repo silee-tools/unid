@@ -9,6 +9,53 @@ pub enum Dir {
     Down,
 }
 
+/// Arrowhead families: each entry is [Right, Left, Up, Down].
+/// Only characters belonging to a known family are valid for `head=` / `arrowhead`.
+const ARROWHEAD_FAMILIES: &[[char; 4]] = &[
+    ['→', '←', '↑', '↓'], // default
+    ['▶', '◀', '▲', '▼'], // filled triangle
+    ['▷', '◁', '△', '▽'], // outline triangle
+    ['⇒', '⇐', '⇑', '⇓'], // double arrow
+];
+
+/// Returns true if the character belongs to a known arrowhead family.
+pub fn is_valid_arrowhead(ch: char) -> bool {
+    ARROWHEAD_FAMILIES.iter().any(|f| f.contains(&ch))
+}
+
+/// Returns all valid arrowhead characters (for error messages).
+pub fn valid_arrowhead_chars() -> Vec<char> {
+    ARROWHEAD_FAMILIES.iter().flat_map(|f| f.iter().copied()).collect()
+}
+
+/// Resolves an arrowhead character to the correct direction variant from its family.
+/// If the character is not in any family, returns the default arrowhead for the direction.
+pub fn resolve_arrowhead(ch: char, dir: Dir) -> char {
+    let idx = match dir {
+        Dir::Right => 0,
+        Dir::Left => 1,
+        Dir::Up => 2,
+        Dir::Down => 3,
+    };
+    for family in ARROWHEAD_FAMILIES {
+        if family.contains(&ch) {
+            return family[idx];
+        }
+    }
+    // Fallback to default family
+    ARROWHEAD_FAMILIES[0][idx]
+}
+
+/// Returns the default arrowhead character for a given direction.
+pub fn default_arrowhead(dir: Dir) -> char {
+    ARROWHEAD_FAMILIES[0][match dir {
+        Dir::Right => 0,
+        Dir::Left => 1,
+        Dir::Up => 2,
+        Dir::Down => 3,
+    }]
+}
+
 /// Unresolved arrow parsed from DSL (references object IDs).
 #[derive(Debug, Clone)]
 pub struct Arrow {
@@ -25,7 +72,7 @@ pub struct ResolvedArrow {
     /// First point = source anchor (outside border).
     /// Last point = destination anchor (on border).
     pub waypoints: Vec<(usize, usize)>,
-    /// Custom arrowhead character (overrides global/default).
+    /// Arrowhead character (any member of a family; resolved to correct direction at render time).
     pub head: Option<char>,
     /// Bidirectional mode: arrowhead on both ends.
     pub both: bool,

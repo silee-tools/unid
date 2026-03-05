@@ -535,12 +535,14 @@ ARROWS:
   Syntax: arrow <src_id>.<side> <dst_id>.<side> [head=<char>] [both] [lg=<text>]
 
   Options:
-    head=<char>       Custom arrowhead character (overrides global arrowhead)
+    head=<char>       Arrowhead family (auto-resolves direction). Valid families:
+                      →←↑↓ (default)  ▶◀▲▼  ▷◁△▽  ⇒⇐⇑⇓
     both              Bidirectional arrow (arrowhead on both ends)
     lg=<text>         Legend text near the arrow
-    arrowhead <char>  Global arrowhead character (separate command)
+    arrowhead <char>  Global arrowhead family (separate command)
 
   Arrowhead priority: per-arrow head= > global arrowhead > default (→←↑↓)
+  Direction auto-resolved: head=▶ on a vertical arrow renders as ▼ or ▲
 
   Route types (auto-selected):
     Straight:     ──→        (opposite sides, aligned)
@@ -590,7 +592,7 @@ EXAMPLE:
     ╭──────────────────────────────────────────────────╮
     │ Server                                           │
     │ ╔════════════════╗  HTTP  ┌────────────┐         │
-    │ ║  API Gateway   ║▶───────▶ Web Client │         │
+    │ ║  API Gateway   ║◀───────▶ Web Client │         │
     │ ╚════════════════╝        └────────────┘         │
     │          │                       │               │
     │          │                       │               │

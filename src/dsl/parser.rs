@@ -1,5 +1,6 @@
 use crate::dsl::command::{CanvasSize, DslCommand};
 use crate::error::UnidError;
+use crate::object::arrow;
 use crate::object::rect::Side;
 use crate::object::{
     BorderStyle, ContentAlign, ContentOverflow, DrawObject, HLine, Legend, LegendPos, LineStyle,
@@ -489,6 +490,20 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
                 line,
                 message: "head= requires a character value".to_string(),
             })?;
+            if !arrow::is_valid_arrowhead(ch) {
+                let valid: Vec<String> = arrow::valid_arrowhead_chars()
+                    .chunks(4)
+                    .map(|f| format!("{}{}{}{}", f[0], f[1], f[2], f[3]))
+                    .collect();
+                return Err(UnidError::Parse {
+                    line,
+                    message: format!(
+                        "invalid arrowhead '{}' (valid families: {})",
+                        ch,
+                        valid.join(", ")
+                    ),
+                });
+            }
             head = Some(ch);
         } else if token == "both" {
             both = true;
@@ -546,6 +561,20 @@ fn parse_arrowhead(tokens: &[String], line: usize) -> Result<DslCommand, UnidErr
         line,
         message: "arrowhead requires a character value".to_string(),
     })?;
+    if !arrow::is_valid_arrowhead(ch) {
+        let valid: Vec<String> = arrow::valid_arrowhead_chars()
+            .chunks(4)
+            .map(|f| format!("{}{}{}{}", f[0], f[1], f[2], f[3]))
+            .collect();
+        return Err(UnidError::Parse {
+            line,
+            message: format!(
+                "invalid arrowhead '{}' (valid families: {})",
+                ch,
+                valid.join(", ")
+            ),
+        });
+    }
     Ok(DslCommand::Arrowhead(ch))
 }
 

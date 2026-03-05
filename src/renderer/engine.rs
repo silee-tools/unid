@@ -1,6 +1,6 @@
 use crate::canvas::Canvas;
 use crate::error::UnidError;
-use crate::object::arrow::{corner_char, segment_dir, Dir, ResolvedArrow};
+use crate::object::arrow::{corner_char, default_arrowhead, resolve_arrowhead, segment_dir, Dir, ResolvedArrow};
 use crate::object::{
     BorderStyle, ContentAlign, ContentOverflow, DrawObject, HLine, Legend, LegendPos, LineStyle,
     Rect, Text, VLine,
@@ -455,15 +455,15 @@ impl Renderer {
             self.canvas.put_char(cc, cr, corner, false, idx)?;
         }
 
-        // Bidirectional: add arrowhead at the start point (reverse direction)
+        // Bidirectional: add arrowhead at the start point (reverse direction).
+        // Resolves to the correct direction variant from the same arrowhead family.
         if arrow.both && wp.len() >= 2 {
             let (sc, sr) = wp[0];
             let (nc, nr) = wp[1];
             let dir = segment_dir(nc, nr, sc, sr);
-            let tip = if let Some(h) = arrow.head {
-                h
-            } else {
-                default_arrowhead(dir)
+            let tip = match arrow.head {
+                Some(ch) => resolve_arrowhead(ch, dir),
+                None => default_arrowhead(dir),
             };
             self.canvas.put_char(sc, sr, tip, false, idx)?;
         }
@@ -536,7 +536,11 @@ impl Renderer {
                 self.canvas.put_char(c, fr, '─', self.collision, idx)?;
             }
             if with_tip {
-                let tip = tip_char.unwrap_or(if tc > fc { '→' } else { '←' });
+                let dir = if tc > fc { Dir::Right } else { Dir::Left };
+                let tip = match tip_char {
+                    Some(ch) => resolve_arrowhead(ch, dir),
+                    None => default_arrowhead(dir),
+                };
                 self.canvas.put_char(tc, fr, tip, self.collision, idx)?;
             }
         } else if fc == tc {
@@ -546,7 +550,11 @@ impl Renderer {
                 self.canvas.put_char(fc, r, '│', self.collision, idx)?;
             }
             if with_tip {
-                let tip = tip_char.unwrap_or(if tr > fr { '↓' } else { '↑' });
+                let dir = if tr > fr { Dir::Down } else { Dir::Up };
+                let tip = match tip_char {
+                    Some(ch) => resolve_arrowhead(ch, dir),
+                    None => default_arrowhead(dir),
+                };
                 self.canvas.put_char(fc, tr, tip, self.collision, idx)?;
             }
         }
@@ -649,17 +657,6 @@ fn truncate_from_end(s: &str, max_width: usize) -> String {
         current_w += w;
     }
     result
-}
-
-/// Returns the default arrowhead character for a given direction.
-fn default_arrowhead(dir: crate::object::arrow::Dir) -> char {
-    use crate::object::arrow::Dir;
-    match dir {
-        Dir::Right => '→',
-        Dir::Left => '←',
-        Dir::Down => '↓',
-        Dir::Up => '↑',
-    }
 }
 
 fn border_chars(style: BorderStyle) -> (char, char, char, char, char, char) {
