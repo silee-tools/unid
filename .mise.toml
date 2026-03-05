@@ -43,3 +43,7 @@ else
   echo "Nothing to unlink: ~/.local/bin/unid not found"
 fi
 """
+
+[tasks.release]
+description = "Interactive release (version bump, tag, push)"
+run = "bash scripts/release.sh"

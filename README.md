@@ -1,22 +1,68 @@
 # unicode-diagram
 
-Unicode box-drawing 문자를 활용한 다이어그램 렌더링 CLI.
-코딩 폰트 기준으로 문자 너비를 자동 계산하여 정렬된 다이어그램을 출력합니다.
+CLI tool for rendering ASCII diagrams using Unicode box-drawing characters.
 
-## 문제
+Monodraw, ASCIIFlow 같은 도구의 텍스트 기반 대안입니다.
+간단한 DSL을 stdin으로 입력하면 정확한 Unicode box-drawing 다이어그램을 렌더링합니다.
 
-텍스트 기반 다이어그램을 그릴 때 발생하는 정렬 문제:
-- CJK 문자 등 일부 글자의 폰트 내 너비가 다름
-- 박스가 비뚤어지거나 텍스트가 정렬되지 않음
-- 문자별 너비를 수동으로 계산하기 어려움
+## 설치
 
-## 접근 방식
+### Homebrew (macOS)
 
-1. **객체 기반 Drawing CLI** — 가상 캔버스에 사각형, 화살표, 텍스트 등을 객체로 배치
-2. **자동 너비 계산** — 코딩 폰트 기준 문자 너비를 라이브러리가 처리
-3. **텍스트 출력** — 최종 결과를 정렬된 텍스트로 렌더링
-4. **사용법 문서 제공** — CLI 사용 방법을 이해할 수 있는 help 문서 포함
+```sh
+brew install silee9019/tap/unid
+```
 
-## 기술 스택
+### 소스 빌드
 
-- Rust
+```sh
+git clone https://github.com/silee9019/unicode-diagram.git
+cd unicode-diagram
+cargo install --path .
+```
+
+## 사용법
+
+```sh
+echo "..." | unid          # stdin으로 다이어그램 렌더링
+echo "..." | unid list     # 다이어그램 내 객체 목록 출력
+echo "..." | unid lint     # DSL 입력 검증
+unid guide                 # 사용 가이드 출력
+```
+
+## 예시
+
+**입력:**
+
+```
+canvas auto
+collision off
+box 0 0 10 3 id=a c=Client
+box 16 0 10 3 id=b c=Server
+box 32 0 8 3 id=c c=DB
+arrow a.r b.l
+arrow b.r c.l
+```
+
+**출력:**
+
+```
+┌──────────┐    ┌──────────┐    ┌────────┐
+│          │    │          │    │        │
+│Client    │───▶│Server    │───▶│DB      │
+│          │    │          │    │        │
+└──────────┘    └──────────┘    └────────┘
+```
+
+## 특징
+
+- **자동 너비 계산** — CJK 문자(한글, 漢字, かな) 포함 코딩 폰트 기준 display-column 계산
+- **다양한 테두리 스타일** — single, double, bold, round, dashed 등
+- **DSL 기반** — 텍스트로 다이어그램을 선언적으로 정의
+- **Lint 지원** — DSL 입력의 오류와 경고를 검출
+
+자세한 사용법은 `unid guide`를 참조하세요.
+
+## 라이선스
+
+[MIT](LICENSE)
