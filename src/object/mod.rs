@@ -58,6 +58,11 @@ impl DrawObject {
                     max_col = max_col.max(c);
                     max_row = max_row.max(r);
                 }
+                if let Some(legend) = &a.legend {
+                    let (lc, lr, lw) = arrow::legend_position(&a.waypoints, legend);
+                    max_col = max_col.max(lc + lw);
+                    max_row = max_row.max(lr + 1);
+                }
                 (max_col + 1, max_row + 1)
             }
         }
@@ -96,15 +101,30 @@ impl DrawObject {
     pub fn collision_desc(&self) -> String {
         match self {
             DrawObject::Rect(r) => {
-                format!("box at ({},{}) {}x{}", r.col, r.row, r.outer_width(), r.outer_height())
+                format!(
+                    "box at ({},{}) {}x{}",
+                    r.col,
+                    r.row,
+                    r.outer_width(),
+                    r.outer_height()
+                )
             }
             DrawObject::Text(t) => {
-                format!("text at ({},{}) w={}", t.col, t.row, width::str_width(&t.content))
+                format!(
+                    "text at ({},{}) w={}",
+                    t.col,
+                    t.row,
+                    width::str_width(&t.content)
+                )
             }
             DrawObject::HLine(h) => format!("hline at ({},{}) len={}", h.col, h.row, h.length),
             DrawObject::VLine(v) => format!("vline at ({},{}) len={}", v.col, v.row, v.length),
             DrawObject::Arrow(a) => {
-                let pts: Vec<String> = a.waypoints.iter().map(|(c, r)| format!("({c},{r})")).collect();
+                let pts: Vec<String> = a
+                    .waypoints
+                    .iter()
+                    .map(|(c, r)| format!("({c},{r})"))
+                    .collect();
                 format!("arrow {}", pts.join("->"))
             }
         }
@@ -137,7 +157,11 @@ impl DrawObject {
                 format!("vline ({},{}) len={} {:?}", v.col, v.row, v.length, v.style)
             }
             DrawObject::Arrow(a) => {
-                let pts: Vec<String> = a.waypoints.iter().map(|(c, r)| format!("({c},{r})")).collect();
+                let pts: Vec<String> = a
+                    .waypoints
+                    .iter()
+                    .map(|(c, r)| format!("({c},{r})"))
+                    .collect();
                 format!("arrow {}", pts.join(" -> "))
             }
         }

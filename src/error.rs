@@ -16,7 +16,9 @@ pub enum UnidError {
         canvas_height: usize,
     },
 
-    #[error("collision: object #{incoming_idx} ({incoming_desc}) overlaps object #{existing_idx} ({existing_desc}) at ({overlap_col},{overlap_row})-({overlap_end_col},{overlap_end_row}) size {overlap_w}x{overlap_h}")]
+    #[error(
+        "collision: object #{incoming_idx} ({incoming_desc}) overlaps object #{existing_idx} ({existing_desc}) at ({overlap_col},{overlap_row})-({overlap_end_col},{overlap_end_row}) size {overlap_w}x{overlap_h}"
+    )]
     Collision {
         incoming_idx: usize,
         incoming_desc: String,
@@ -30,7 +32,9 @@ pub enum UnidError {
         overlap_h: usize,
     },
 
-    #[error("content overflow: '{label}' ({label_width} cols) exceeds box inner width ({inner_width} cols)")]
+    #[error(
+        "content overflow: '{label}' ({label_width} cols) exceeds box inner width ({inner_width} cols)"
+    )]
     LabelOverflow {
         label: String,
         label_width: usize,

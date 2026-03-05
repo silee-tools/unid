@@ -1,6 +1,9 @@
 use crate::canvas::Canvas;
 use crate::error::UnidError;
-use crate::object::arrow::{corner_char, default_arrowhead, resolve_arrowhead, segment_dir, Dir, ResolvedArrow};
+use crate::object::arrow::{
+    Dir, ResolvedArrow, corner_char, default_arrowhead, legend_position, resolve_arrowhead,
+    segment_dir,
+};
 use crate::object::{
     BorderStyle, ContentAlign, ContentOverflow, DrawObject, HLine, Legend, LegendPos, LineStyle,
     Rect, Text, VLine,
@@ -136,13 +139,12 @@ impl Renderer {
                 };
 
                 // Calculate overlap region between two objects
-                let (oc, or, oec, oer, ow, oh) = if idx < self.objects.len()
-                    && existing_idx < self.objects.len()
-                {
-                    self.compute_overlap(idx, existing_idx)
-                } else {
-                    (overlap_col, overlap_row, overlap_col, overlap_row, 1, 1)
-                };
+                let (oc, or, oec, oer, ow, oh) =
+                    if idx < self.objects.len() && existing_idx < self.objects.len() {
+                        self.compute_overlap(idx, existing_idx)
+                    } else {
+                        (overlap_col, overlap_row, overlap_col, overlap_row, 1, 1)
+                    };
 
                 UnidError::Collision {
                     incoming_idx: idx + 1,
@@ -204,16 +206,14 @@ impl Renderer {
         // Top border
         self.canvas.put_char(col, row, tl, self.collision, idx)?;
         for c in 1..=inner_w {
-            self.canvas
-                .put_char(col + c, row, h, self.collision, idx)?;
+            self.canvas.put_char(col + c, row, h, self.collision, idx)?;
         }
         self.canvas
             .put_char(col + inner_w + 1, row, tr, self.collision, idx)?;
 
         // Side borders
         for r in 1..=inner_h {
-            self.canvas
-                .put_char(col, row + r, v, self.collision, idx)?;
+            self.canvas.put_char(col, row + r, v, self.collision, idx)?;
             self.canvas
                 .put_char(col + inner_w + 1, row + r, v, self.collision, idx)?;
         }
@@ -225,8 +225,13 @@ impl Renderer {
             self.canvas
                 .put_char(col + c, row + inner_h + 1, h, self.collision, idx)?;
         }
-        self.canvas
-            .put_char(col + inner_w + 1, row + inner_h + 1, br, self.collision, idx)?;
+        self.canvas.put_char(
+            col + inner_w + 1,
+            row + inner_h + 1,
+            br,
+            self.collision,
+            idx,
+        )?;
 
         Ok(())
     }
@@ -296,13 +301,9 @@ impl Renderer {
             line.to_string()
         } else {
             match overflow {
-                ContentOverflow::Ellipsis => {
-                    ellipsis_truncate(line, content_w, inner_w, align)
-                }
+                ContentOverflow::Ellipsis => ellipsis_truncate(line, content_w, inner_w, align),
                 ContentOverflow::Overflow => line.to_string(),
-                ContentOverflow::Hidden => {
-                    hidden_truncate(line, inner_w, align)
-                }
+                ContentOverflow::Hidden => hidden_truncate(line, inner_w, align),
                 ContentOverflow::Error => {
                     return Err(UnidError::LabelOverflow {
                         label: line.to_string(),
@@ -320,17 +321,13 @@ impl Renderer {
             ContentAlign::Right => inner_w.saturating_sub(display_w),
         };
 
-        self.canvas.put_str(
-            col + 1 + pad_left,
-            row,
-            &display,
-            false,
-            idx,
-        )
+        self.canvas
+            .put_str(col + 1 + pad_left, row, &display, false, idx)
     }
 
     /// Draws legend text at the given position (multiline supported).
     /// Legend text is rendered without collision check (text always wins over structure).
+    /// Applies overflow mode when text exceeds available canvas width.
     fn draw_legend_text(
         &mut self,
         col: usize,
@@ -338,8 +335,39 @@ impl Renderer {
         legend: &Legend,
         idx: usize,
     ) -> Result<(), UnidError> {
+        let canvas_w = self.canvas.width();
+        let canvas_h = self.canvas.height();
+
         for (i, line) in legend.text.lines().enumerate() {
-            self.canvas.put_str(col, row + i, line, false, idx)?;
+            let target_row = row + i;
+            if target_row >= canvas_h || col >= canvas_w {
+                break;
+            }
+
+            let available_w = canvas_w - col;
+            let text_w = width::str_width(line);
+
+            if text_w <= available_w {
+                self.canvas.put_str(col, target_row, line, false, idx)?;
+            } else {
+                let display = match legend.overflow {
+                    ContentOverflow::Ellipsis => {
+                        ellipsis_truncate(line, text_w, available_w, ContentAlign::Left)
+                    }
+                    ContentOverflow::Overflow => line.to_string(),
+                    ContentOverflow::Hidden => {
+                        hidden_truncate(line, available_w, ContentAlign::Left)
+                    }
+                    ContentOverflow::Error => {
+                        return Err(UnidError::LabelOverflow {
+                            label: line.to_string(),
+                            label_width: text_w,
+                            inner_width: available_w,
+                        });
+                    }
+                };
+                self.canvas.put_str(col, target_row, &display, false, idx)?;
+            }
         }
         Ok(())
     }
@@ -480,8 +508,7 @@ impl Renderer {
     }
 
     /// Draws arrow legend text near the midpoint of a segment.
-    /// For bent arrows (3+ waypoints), uses the longest segment from the second onwards.
-    /// For straight arrows (2 waypoints), uses the only segment.
+    /// Position and alignment are computed by `arrow::legend_position()`.
     fn draw_arrow_legend(
         &mut self,
         wp: &[(usize, usize)],
@@ -492,42 +519,7 @@ impl Renderer {
             return Ok(());
         }
 
-        // For bent arrows, pick the longest segment from the second one onwards.
-        let seg_idx = if wp.len() >= 3 {
-            (1..wp.len() - 1)
-                .max_by_key(|&i| {
-                    let (fc, fr) = wp[i];
-                    let (tc, tr) = wp[i + 1];
-                    fc.abs_diff(tc) + fr.abs_diff(tr)
-                })
-                .unwrap_or(1)
-        } else {
-            0
-        };
-
-        let (fc, fr) = wp[seg_idx];
-        let (tc, tr) = wp[seg_idx + 1];
-        let mid_c = (fc + tc) / 2;
-        let mid_r = (fr + tr) / 2;
-        let dir = segment_dir(fc, fr, tc, tr);
-        let is_horizontal = matches!(dir, Dir::Left | Dir::Right);
-
-        let effective_pos = match legend.pos {
-            LegendPos::Auto => {
-                if is_horizontal { LegendPos::Top } else { LegendPos::Right }
-            }
-            other => other,
-        };
-
-        let text_w = width::str_width(&legend.text);
-        let (lg_col, lg_row) = match effective_pos {
-            LegendPos::Top => (mid_c.saturating_sub(text_w / 2), mid_r.saturating_sub(1)),
-            LegendPos::Bottom => (mid_c.saturating_sub(text_w / 2), mid_r + 1),
-            LegendPos::Left => (mid_c.saturating_sub(text_w + 1), mid_r),
-            LegendPos::Right => (mid_c + 1, mid_r),
-            LegendPos::Auto => unreachable!(),
-        };
-
+        let (lg_col, lg_row, _) = legend_position(wp, legend);
         self.draw_legend_text(lg_col, lg_row, legend, idx)
     }
 
@@ -858,28 +850,48 @@ mod tests {
 
     #[test]
     fn render_horizontal_arrow_right() {
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (4, 0)], head: None, both: false, legend: None };
+        let arrow = ResolvedArrow {
+            waypoints: vec![(0, 0), (4, 0)],
+            head: None,
+            both: false,
+            legend: None,
+        };
         let result = render_objects(5, 1, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "────▶");
     }
 
     #[test]
     fn render_horizontal_arrow_left() {
-        let arrow = ResolvedArrow { waypoints: vec![(4, 0), (0, 0)], head: None, both: false, legend: None };
+        let arrow = ResolvedArrow {
+            waypoints: vec![(4, 0), (0, 0)],
+            head: None,
+            both: false,
+            legend: None,
+        };
         let result = render_objects(5, 1, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "◀────");
     }
 
     #[test]
     fn render_vertical_arrow_down() {
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 2)], head: None, both: false, legend: None };
+        let arrow = ResolvedArrow {
+            waypoints: vec![(0, 0), (0, 2)],
+            head: None,
+            both: false,
+            legend: None,
+        };
         let result = render_objects(1, 3, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "│\n│\n▼");
     }
 
     #[test]
     fn render_vertical_arrow_up() {
-        let arrow = ResolvedArrow { waypoints: vec![(0, 2), (0, 0)], head: None, both: false, legend: None };
+        let arrow = ResolvedArrow {
+            waypoints: vec![(0, 2), (0, 0)],
+            head: None,
+            both: false,
+            legend: None,
+        };
         let result = render_objects(1, 3, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "▲\n│\n│");
     }
@@ -990,7 +1002,12 @@ mod tests {
     #[test]
     fn render_l_shaped_arrow() {
         // L-shape: right then down via bend at (3,0)
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (3, 0), (3, 2)], head: None, both: false, legend: None };
+        let arrow = ResolvedArrow {
+            waypoints: vec![(0, 0), (3, 0), (3, 2)],
+            head: None,
+            both: false,
+            legend: None,
+        };
         let result = render_objects(4, 3, &[DrawObject::Arrow(arrow)], false);
         assert_eq!(result, "───┐\n   │\n   ▼");
     }
@@ -998,7 +1015,12 @@ mod tests {
     #[test]
     fn render_z_shaped_arrow() {
         // Z-shape: down, then right, then down
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 2), (4, 2), (4, 4)], head: None, both: false, legend: None };
+        let arrow = ResolvedArrow {
+            waypoints: vec![(0, 0), (0, 2), (4, 2), (4, 4)],
+            head: None,
+            both: false,
+            legend: None,
+        };
         let result = render_objects(5, 5, &[DrawObject::Arrow(arrow)], false);
         assert!(result.contains('│'));
         assert!(result.contains('└'));
@@ -1009,7 +1031,12 @@ mod tests {
     #[test]
     fn render_u_shaped_arrow() {
         // U-shape: down, right, then up
-        let arrow = ResolvedArrow { waypoints: vec![(0, 0), (0, 3), (4, 3), (4, 0)], head: None, both: false, legend: None };
+        let arrow = ResolvedArrow {
+            waypoints: vec![(0, 0), (0, 3), (4, 3), (4, 0)],
+            head: None,
+            both: false,
+            legend: None,
+        };
         let result = render_objects(5, 4, &[DrawObject::Arrow(arrow)], false);
         assert!(result.contains('└'));
         assert!(result.contains('┘'));

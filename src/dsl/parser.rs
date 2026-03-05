@@ -190,13 +190,10 @@ fn parse_canvas(tokens: &[String], line: usize) -> Result<DslCommand, UnidError>
     for token in &tokens[opts_start..] {
         if let Some(v) = strip_option(token, "border").or_else(|| strip_option(token, "b")) {
             border = Some(parse_border_style(v, line)?);
-        } else if let Some(v) =
-            strip_option(token, "overflow").or_else(|| strip_option(token, "o"))
+        } else if let Some(v) = strip_option(token, "overflow").or_else(|| strip_option(token, "o"))
         {
             content_overflow = Some(parse_content_overflow(v, line)?);
-        } else if let Some(v) =
-            strip_option(token, "align").or_else(|| strip_option(token, "a"))
-        {
+        } else if let Some(v) = strip_option(token, "align").or_else(|| strip_option(token, "a")) {
             content_align = Some(parse_content_align(v, line)?);
         } else {
             return Err(UnidError::Parse {
@@ -382,7 +379,9 @@ fn parse_hline(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
         } else if let Some(v) = strip_option(token, "id") {
             validate_id(v, line)?;
             hline.id = Some(v.to_string());
-        } else if let Some(v) = strip_option(token, "pos").or_else(|| strip_option(token, "position")) {
+        } else if let Some(v) =
+            strip_option(token, "pos").or_else(|| strip_option(token, "position"))
+        {
             lg_pos = Some(parse_legend_pos(v, line)?);
         } else if let Some(v) =
             strip_option(token, "legend-overflow").or_else(|| strip_option(token, "lo"))
@@ -444,7 +443,9 @@ fn parse_vline(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
         } else if let Some(v) = strip_option(token, "id") {
             validate_id(v, line)?;
             vline.id = Some(v.to_string());
-        } else if let Some(v) = strip_option(token, "pos").or_else(|| strip_option(token, "position")) {
+        } else if let Some(v) =
+            strip_option(token, "pos").or_else(|| strip_option(token, "position"))
+        {
             lg_pos = Some(parse_legend_pos(v, line)?);
         } else if let Some(v) =
             strip_option(token, "legend-overflow").or_else(|| strip_option(token, "lo"))
@@ -485,7 +486,9 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
     if tokens.len() < 3 {
         return Err(UnidError::Parse {
             line,
-            message: "arrow requires <src_id>.<side> <dst_id>.<side> (e.g., 'arrow api.right db.top')".to_string(),
+            message:
+                "arrow requires <src_id>.<side> <dst_id>.<side> (e.g., 'arrow api.right db.top')"
+                    .to_string(),
         });
     }
 
@@ -523,7 +526,9 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
             head = Some(ch);
         } else if token == "both" {
             both = true;
-        } else if let Some(v) = strip_option(token, "pos").or_else(|| strip_option(token, "position")) {
+        } else if let Some(v) =
+            strip_option(token, "pos").or_else(|| strip_option(token, "position"))
+        {
             lg_pos = Some(parse_legend_pos(v, line)?);
         } else if let Some(v) =
             strip_option(token, "legend-overflow").or_else(|| strip_option(token, "lo"))
@@ -551,7 +556,7 @@ fn parse_arrow(tokens: &[String], line: usize) -> Result<DslCommand, UnidError> 
                     text: lg_text,
                     pos: lg_pos.unwrap_or(LegendPos::Auto),
                     overflow: lg_overflow.unwrap_or_default(),
-                    align: lg_align.unwrap_or_default(),
+                    align: lg_align.unwrap_or(ContentAlign::Center),
                 });
                 break;
             }
@@ -602,7 +607,10 @@ fn parse_arrowhead(tokens: &[String], line: usize) -> Result<DslCommand, UnidErr
 fn parse_anchor(s: &str, line: usize) -> Result<(String, Side), UnidError> {
     let (id, side_str) = s.rsplit_once('.').ok_or_else(|| UnidError::Parse {
         line,
-        message: format!("invalid anchor '{}' (expected <id>.<side>, e.g., 'api.right')", s),
+        message: format!(
+            "invalid anchor '{}' (expected <id>.<side>, e.g., 'api.right')",
+            s
+        ),
     })?;
 
     if id.is_empty() {
@@ -641,13 +649,13 @@ fn validate_id(id: &str, line: usize) -> Result<(), UnidError> {
             message: "id cannot be empty".to_string(),
         });
     }
-    if !id.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') {
+    if !id
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+    {
         return Err(UnidError::Parse {
             line,
-            message: format!(
-                "invalid id '{}' (only alphanumeric, '_', '-' allowed)",
-                id
-            ),
+            message: format!("invalid id '{}' (only alphanumeric, '_', '-' allowed)", id),
         });
     }
     Ok(())
@@ -731,10 +739,7 @@ fn parse_content_align(s: &str, line: usize) -> Result<ContentAlign, UnidError> 
         "right" | "r" => Ok(ContentAlign::Right),
         _ => Err(UnidError::Parse {
             line,
-            message: format!(
-                "unknown align '{}' (expected left/l, center/c, right/r)",
-                s
-            ),
+            message: format!("unknown align '{}' (expected left/l, center/c, right/r)", s),
         }),
     }
 }
@@ -937,7 +942,13 @@ mod tests {
     fn parse_arrow_anchor() {
         let cmds = parse("arrow api.right db.top").unwrap();
         match &cmds[0] {
-            DslCommand::Arrow { src_id, src_side, dst_id, dst_side, .. } => {
+            DslCommand::Arrow {
+                src_id,
+                src_side,
+                dst_id,
+                dst_side,
+                ..
+            } => {
                 assert_eq!(src_id, "api");
                 assert_eq!(*src_side, Side::Right);
                 assert_eq!(dst_id, "db");
@@ -951,7 +962,9 @@ mod tests {
     fn parse_arrow_shorthand_sides() {
         let cmds = parse("arrow a.r b.l").unwrap();
         match &cmds[0] {
-            DslCommand::Arrow { src_side, dst_side, .. } => {
+            DslCommand::Arrow {
+                src_side, dst_side, ..
+            } => {
                 assert_eq!(*src_side, Side::Right);
                 assert_eq!(*dst_side, Side::Left);
             }
