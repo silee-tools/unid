@@ -17,6 +17,8 @@ brew install silee-tools/tap/unid
 
 ### Build from source
 
+Requires Go 1.25 or newer (matching `go.mod`).
+
 ```sh
 git clone https://github.com/silee-tools/unid.git
 cd unid
@@ -32,6 +34,7 @@ echo "..." | unid          # Render diagram from stdin
 echo "..." | unid list     # List objects in diagram
 echo "..." | unid lint     # Lint DSL input
 unid guide                 # Show usage guide
+unid --version             # Show version
 ```
 
 ## Example
