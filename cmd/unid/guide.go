@@ -13,6 +13,7 @@ USAGE:
   echo "..." | unid list    List objects in diagram
   echo "..." | unid lint    Lint DSL for errors/warnings
   unid guide                Show this guide
+  unid --version            Show version
 
 DSL SYNTAX:
   Lines starting with # are comments. Blank lines are ignored.
